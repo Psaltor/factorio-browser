@@ -1,3 +1,4 @@
+use crate::components::footer::Footer;
 use crate::db::models::CachedServer;
 use crate::utils::parse_rich_text;
 use yew::prelude::*;
@@ -228,10 +229,9 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                 } else {
                     html! {}
                 }}
-                
-                <footer class="p-4 px-8 bg-bg-dark rounded-b-lg">
-                    <span class="text-xs text-text-muted">{"Last updated: "}{&server.cached_at}</span>
-                </footer>
+                <div class="p-4 px-8 bg-bg-dark rounded-b-lg">
+                    <Footer />
+                </div>
             </div>
         </div>
     }
