@@ -1,11 +1,90 @@
-// Client-side sorting for server cards
+// Client-side sorting and view toggle for server list
 (function() {
     const grid = document.querySelector('.server-grid');
-    const buttons = document.querySelectorAll('.sort-button');
+    const sortButtons = document.querySelectorAll('.sort-button');
+    const viewButtons = document.querySelectorAll('.view-btn');
     
-    if (!grid || !buttons.length) return;
+    if (!grid) return;
     
-    buttons.forEach(btn => {
+    const STORAGE_KEY_VIEW = 'factorio-browser-view';
+    const STORAGE_KEY_SORT = 'factorio-browser-sort';
+    
+    // Load saved preferences
+    function loadPreferences() {
+        try {
+            // Load view preference
+            const savedView = localStorage.getItem(STORAGE_KEY_VIEW);
+            if (savedView === 'list') {
+                setView('list');
+            }
+            
+            // Load sort preference
+            const savedSort = localStorage.getItem(STORAGE_KEY_SORT);
+            if (savedSort) {
+                const [sortBy, dir] = savedSort.split(':');
+                if (sortBy && dir) {
+                    applySort(sortBy, dir);
+                    return;
+                }
+            }
+        } catch (e) {
+            // localStorage not available
+        }
+        
+        // Default sort
+        applySort('players', 'desc');
+    }
+    
+    // Save preferences
+    function saveViewPref(view) {
+        try {
+            localStorage.setItem(STORAGE_KEY_VIEW, view);
+        } catch (e) {}
+    }
+    
+    function saveSortPref(sortBy, dir) {
+        try {
+            localStorage.setItem(STORAGE_KEY_SORT, `${sortBy}:${dir}`);
+        } catch (e) {}
+    }
+    
+    // View toggle
+    function setView(view) {
+        if (view === 'list') {
+            grid.classList.add('list-view');
+        } else {
+            grid.classList.remove('list-view');
+        }
+        
+        viewButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
+        
+        saveViewPref(view);
+    }
+    
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setView(btn.dataset.view);
+        });
+    });
+    
+    // Sorting
+    function applySort(sortBy, dir) {
+        // Update button states
+        sortButtons.forEach(btn => {
+            const isActive = btn.dataset.sort === sortBy;
+            btn.classList.toggle('active', isActive);
+            btn.dataset.dir = isActive ? dir : '';
+            btn.querySelector('.sort-arrow').textContent = isActive ? (dir === 'desc' ? '▼' : '▲') : '';
+        });
+        
+        // Sort the items
+        sortItems(sortBy, dir);
+        saveSortPref(sortBy, dir);
+    }
+    
+    sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const sortBy = btn.dataset.sort;
             const wasActive = btn.classList.contains('active');
@@ -18,36 +97,23 @@
                 dir = 'desc';
             }
             
-            // Update button states
-            buttons.forEach(b => {
-                b.classList.remove('active');
-                b.dataset.dir = '';
-                b.querySelector('.sort-arrow').textContent = '';
-            });
-            
-            btn.classList.add('active');
-            btn.dataset.dir = dir;
-            btn.querySelector('.sort-arrow').textContent = dir === 'desc' ? '▼' : '▲';
-            
-            // Sort the cards
-            sortCards(sortBy, dir);
+            applySort(sortBy, dir);
         });
     });
     
-    function sortCards(sortBy, dir) {
-        const cards = Array.from(grid.querySelectorAll('.server-card'));
+    function sortItems(sortBy, dir) {
+        const items = Array.from(grid.querySelectorAll('.server-item'));
         
-        cards.sort((a, b) => {
+        items.sort((a, b) => {
             const aVal = parseInt(a.dataset[sortBy]) || 0;
             const bVal = parseInt(b.dataset[sortBy]) || 0;
             return dir === 'desc' ? bVal - aVal : aVal - bVal;
         });
         
         // Re-append in sorted order
-        cards.forEach(card => grid.appendChild(card));
+        items.forEach(item => grid.appendChild(item));
     }
     
-    // Initial sort by players descending
-    sortCards('players', 'desc');
+    // Initialize
+    loadPreferences();
 })();
-

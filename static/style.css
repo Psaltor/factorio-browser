@@ -328,11 +328,180 @@ body {
     margin-left: 2px;
 }
 
+/* View Toggle */
+.view-toggle {
+    display: flex;
+    gap: 2px;
+    margin-left: var(--space-md);
+    padding-left: var(--space-md);
+    border-left: 1px solid var(--border-subtle);
+}
+
+.view-btn {
+    padding: var(--space-xs) var(--space-sm);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.view-btn:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.view-btn:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    border-left: none;
+}
+
+.view-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.view-btn.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--bg-dark);
+}
+
 /* Server Grid */
 .server-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--space-lg);
+}
+
+/* Server Item (wrapper for card and row) */
+.server-item {
+    display: contents;
+}
+
+/* Hide row by default (grid view) */
+.server-row {
+    display: none;
+}
+
+/* List View Mode */
+.server-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.server-grid.list-view .server-card {
+    display: none;
+}
+
+.server-grid.list-view .server-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.server-grid.list-view .server-row:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-elevated);
+}
+
+.row-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.row-lock {
+    margin-left: var(--space-xs);
+    font-size: 0.85em;
+}
+
+.row-players {
+    width: 60px;
+    text-align: center;
+    color: var(--accent-secondary);
+    font-weight: 500;
+}
+
+.row-version {
+    width: 70px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.row-time {
+    width: 80px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.row-mods {
+    width: 80px;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* List Header (hidden in grid view) */
+.list-header {
+    display: none;
+}
+
+.server-grid.list-view .list-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-dark);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-sm);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.header-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-players {
+    width: 60px;
+    text-align: center;
+}
+
+.header-version {
+    width: 70px;
+    text-align: center;
+}
+
+.header-time {
+    width: 80px;
+    text-align: center;
+}
+
+.header-mods {
+    width: 80px;
+    text-align: right;
 }
 
 /* Server Card */

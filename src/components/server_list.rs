@@ -121,10 +121,22 @@ pub fn server_list(props: &ServerListProps) -> Html {
                                 <button type="button" class="sort-button" data-sort="time">
                                     {"Game Time "}<span class="sort-arrow">{""}</span>
                                 </button>
+                                
+                                <div class="view-toggle">
+                                    <button type="button" class="view-btn active" data-view="grid" title="Grid view">{"▦"}</button>
+                                    <button type="button" class="view-btn" data-view="list" title="List view">{"☰"}</button>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="server-grid">
+                            <div class="list-header">
+                                <span class="header-name">{"Name"}</span>
+                                <span class="header-players">{"Players"}</span>
+                                <span class="header-version">{"Version"}</span>
+                                <span class="header-time">{"Time"}</span>
+                                <span class="header-mods">{"Mods"}</span>
+                            </div>
                             {for filtered_servers.iter().map(|server| {
                                 html! {
                                     <ServerCard 

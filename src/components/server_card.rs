@@ -35,70 +35,93 @@ pub fn server_card(props: &ServerCardProps) -> Html {
     // Link to server details page
     let details_url = format!("/server/{}", server.game_id);
 
+    let mods_display = if server.mod_count > 0 {
+        format!("{} mods", server.mod_count)
+    } else {
+        "Vanilla".to_string()
+    };
+
     html! {
-        <a href={details_url} class="server-card" 
-           data-players={server.player_count.to_string()} 
-           data-time={server.game_time_elapsed.to_string()}>
-            <div class="server-header">
-                <h3 class="server-name">{parse_rich_text(&server.name)}</h3>
-                {if server.has_password {
-                    html! { <span class="password-badge" title="Password Protected">{"🔒"}</span> }
+        <div class="server-item" data-players={server.player_count.to_string()} data-time={server.game_time_elapsed.to_string()}>
+            // Card view
+            <a href={details_url.clone()} class="server-card">
+                <div class="server-header">
+                    <h3 class="server-name">{parse_rich_text(&server.name)}</h3>
+                    {if server.has_password {
+                        html! { <span class="password-badge" title="Password Protected">{"🔒"}</span> }
+                    } else {
+                        html! {}
+                    }}
+                </div>
+                
+                <div class="server-info">
+                    <div class={player_class}>
+                        <span class="player-icon">{"👥"}</span>
+                        <span>{format!("{}/{}", server.player_count, server.max_players)}</span>
+                    </div>
+                    
+                    <div class="server-version">
+                        <span class="version-icon">{"🎮"}</span>
+                        <span>{&server.game_version}</span>
+                    </div>
+                    
+                    <div class="server-time">
+                        <span class="time-icon">{"⏱️"}</span>
+                        <span>{&game_time}</span>
+                    </div>
+                    
+                    {if server.mod_count > 0 {
+                        html! {
+                            <div class="server-mods">
+                                <span class="mods-icon">{"📦"}</span>
+                                <span>{format!("{} mods", server.mod_count)}</span>
+                            </div>
+                        }
+                    } else {
+                        html! {
+                            <div class="server-mods vanilla">
+                                <span>{"Vanilla"}</span>
+                            </div>
+                        }
+                    }}
+                </div>
+                
+                {if !server.description.is_empty() {
+                    html! {
+                        <p class="server-description">{parse_rich_text(&server.description)}</p>
+                    }
                 } else {
                     html! {}
                 }}
-            </div>
-            
-            <div class="server-info">
-                <div class={player_class}>
-                    <span class="player-icon">{"👥"}</span>
-                    <span>{format!("{}/{}", server.player_count, server.max_players)}</span>
-                </div>
                 
-                <div class="server-version">
-                    <span class="version-icon">{"🎮"}</span>
-                    <span>{&server.game_version}</span>
-                </div>
-                
-                <div class="server-time">
-                    <span class="time-icon">{"⏱️"}</span>
-                    <span>{game_time}</span>
-                </div>
-                
-                {if server.mod_count > 0 {
+                {if !server.tags.is_empty() {
                     html! {
-                        <div class="server-mods">
-                            <span class="mods-icon">{"📦"}</span>
-                            <span>{format!("{} mods", server.mod_count)}</span>
+                        <div class="server-tags">
+                            {for server.tags.iter().take(5).map(|tag| {
+                                html! { <span class="tag">{tag}</span> }
+                            })}
                         </div>
                     }
                 } else {
-                    html! {
-                        <div class="server-mods vanilla">
-                            <span>{"Vanilla"}</span>
-                        </div>
-                    }
+                    html! {}
                 }}
-            </div>
+            </a>
             
-            {if !server.description.is_empty() {
-                html! {
-                    <p class="server-description">{parse_rich_text(&server.description)}</p>
-                }
-            } else {
-                html! {}
-            }}
-            
-            {if !server.tags.is_empty() {
-                html! {
-                    <div class="server-tags">
-                        {for server.tags.iter().take(5).map(|tag| {
-                            html! { <span class="tag">{tag}</span> }
-                        })}
-                    </div>
-                }
-            } else {
-                html! {}
-            }}
-        </a>
+            // List row view
+            <a href={details_url} class="server-row">
+                <span class="row-name">
+                    {&server.name}
+                    {if server.has_password {
+                        html! { <span class="row-lock">{"🔒"}</span> }
+                    } else {
+                        html! {}
+                    }}
+                </span>
+                <span class="row-players">{format!("{}/{}", server.player_count, server.max_players)}</span>
+                <span class="row-version">{&server.game_version}</span>
+                <span class="row-time">{&game_time}</span>
+                <span class="row-mods">{&mods_display}</span>
+            </a>
+        </div>
     }
 }
