@@ -98,7 +98,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                     html! {
                         <div class="flex flex-wrap gap-1">
                             {for server.tags.iter().take(5).map(|tag| {
-                                html! { <span class="py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary">{tag}</span> }
+                                html! { <span class="py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary">{parse_rich_text(tag)}</span> }
                             })}
                         </div>
                     }

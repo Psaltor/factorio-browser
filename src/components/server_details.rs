@@ -179,7 +179,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                 {if !props.mods.is_empty() {
                     html! {
                         <section class="p-6 px-8 border-b border-border-subtle">
-                            <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{format!("Mods ({})", props.mods.len())}</h3>
+                            <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{"Mods"}</h3>
                             <div class="mods-list grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-2 max-h-[400px] overflow-y-auto">
                                 {for props.mods.iter().map(|m| {
                                     let mod_url = format!("https://mods.factorio.com/mod/{}", m.name);
@@ -203,7 +203,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                             <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{"Tags"}</h3>
                             <div class="flex flex-wrap gap-2">
                                 {for server.tags.iter().map(|tag| {
-                                    html! { <span class="py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary">{tag}</span> }
+                                    html! { <span class="py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary">{parse_rich_text(tag)}</span> }
                                 })}
                             </div>
                         </section>

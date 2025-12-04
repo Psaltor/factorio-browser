@@ -82,10 +82,10 @@ impl DbClient {
                 DEFINE FIELD IF NOT EXISTS description ON servers TYPE string;
                 DEFINE FIELD IF NOT EXISTS max_players ON servers TYPE int;
                 DEFINE FIELD IF NOT EXISTS player_count ON servers TYPE int;
-                DEFINE FIELD IF NOT EXISTS players ON servers TYPE array;
+                DEFINE FIELD IF NOT EXISTS players ON servers TYPE array<string>;
                 DEFINE FIELD IF NOT EXISTS game_time_elapsed ON servers TYPE int;
                 DEFINE FIELD IF NOT EXISTS has_password ON servers TYPE bool;
-                DEFINE FIELD IF NOT EXISTS tags ON servers TYPE array;
+                DEFINE FIELD IF NOT EXISTS tags ON servers TYPE array<string>;
                 DEFINE FIELD IF NOT EXISTS mod_count ON servers TYPE int;
                 DEFINE FIELD IF NOT EXISTS game_version ON servers TYPE string;
                 DEFINE FIELD IF NOT EXISTS build_version ON servers TYPE int;

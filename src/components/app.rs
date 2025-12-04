@@ -1,5 +1,6 @@
 use crate::components::server_list::ServerList;
 use crate::db::models::CachedServer;
+use chrono::Datelike;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone, Default)]
@@ -23,6 +24,7 @@ pub struct AppProps {
 pub fn app(props: &AppProps) -> Html {
     let total_players: usize = props.servers.iter().map(|s| s.player_count).sum();
     let servers_with_players = props.servers.iter().filter(|s| s.player_count > 0).count();
+    let current_year = chrono::Utc::now().year();
 
     html! {
         <div class="min-h-screen flex flex-col">
@@ -64,7 +66,8 @@ pub fn app(props: &AppProps) -> Html {
             </main>
             
             <footer class="text-center p-6 text-text-muted text-sm border-t border-border-subtle">
-                <p>{"Data from Factorio Matchmaking API • Not affiliated with Wube Software"}</p>
+                <p>{format!("© {} • Brought to you by ", current_year)}<a href="https://lambs.cafe" class="text-accent-primary hover:text-accent-secondary transition-colors" target="_blank" rel="noopener noreferrer">{"lambs.cafe"}</a></p>
+                <p class="mt-1">{"Data from Factorio Matchmaking API • Not affiliated with Wube Software"}</p>
             </footer>
         </div>
     }
