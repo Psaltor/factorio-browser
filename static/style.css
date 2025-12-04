@@ -1,36 +1,48 @@
 /* 
  * Factorio Server Browser
- * Industrial-inspired dark theme with amber accents
+ * Styled to match factorio.com
  */
 
 :root {
-    /* Industrial color palette */
-    --bg-dark: #0a0c0f;
-    --bg-card: #12161c;
-    --bg-hover: #1a1f28;
-    --bg-overlay: rgba(10, 12, 15, 0.95);
+    /* factorio.com color palette */
+    --bg-dark: #1a1a1a;
+    --bg-card: #3c3c3c;
+    --bg-elevated: #4a4a4a;
+    --bg-hover: #505050;
+    --bg-inset: #2d2d2d;
+    --bg-overlay: rgba(26, 26, 26, 0.95);
     
-    --border-subtle: #1e252e;
-    --border-accent: #2a3442;
+    /* Borders */
+    --border-dark: #333333;
+    --border-subtle: #555555;
+    --border-accent: #666666;
+    --border-light: #777777;
     
-    /* Factorio-inspired amber/orange */
-    --accent-primary: #f5a623;
-    --accent-secondary: #e8912d;
-    --accent-glow: rgba(245, 166, 35, 0.15);
+    /* Cyan accent (links) */
+    --accent-primary: #5cb3c1;
+    --accent-secondary: #7ec8d3;
+    --accent-dark: #4a9aa6;
+    --accent-glow: rgba(92, 179, 193, 0.2);
+    
+    /* Green CTA buttons */
+    --btn-green: #7fcd33;
+    --btn-green-hover: #8fd94a;
+    --btn-green-dark: #5ea523;
     
     /* Status colors */
-    --status-full: #e74c3c;
-    --status-medium: #f39c12;
-    --status-low: #27ae60;
-    --status-empty: #5a6978;
+    --status-full: #ff4444;
+    --status-medium: #ffaa00;
+    --status-low: #7fcd33;
+    --status-empty: #666666;
     
     /* Text colors */
-    --text-primary: #e8ecf1;
-    --text-secondary: #8b95a5;
-    --text-muted: #5a6978;
+    --text-primary: #d4d4d4;
+    --text-secondary: #888888;
+    --text-muted: #666666;
+    --text-bright: #ffffff;
     
     /* Typography */
-    --font-display: 'Outfit', system-ui, sans-serif;
+    --font-display: 'Titillium Web', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     
     /* Spacing */
@@ -42,9 +54,14 @@
     --space-2xl: 3rem;
     
     /* Border radius */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
+    --radius-sm: 3px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+    
+    /* Shadows - simpler, flatter */
+    --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-bevel: none;
+    --shadow-panel: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 * {
@@ -57,14 +74,9 @@ body {
     font-family: var(--font-display);
     background: var(--bg-dark);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
     min-height: 100vh;
-    
-    /* Subtle grid pattern background */
-    background-image: 
-        linear-gradient(rgba(245, 166, 35, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(245, 166, 35, 0.02) 1px, transparent 1px);
-    background-size: 50px 50px;
+    font-weight: 400;
 }
 
 /* App Layout */
@@ -76,7 +88,7 @@ body {
 
 /* Header */
 .app-header {
-    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+    background: var(--bg-card);
     border-bottom: 1px solid var(--border-subtle);
     padding: var(--space-xl) var(--space-lg);
 }
@@ -91,7 +103,7 @@ body {
 .app-title {
     font-size: 2.5rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    color: var(--text-bright);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,7 +149,7 @@ body {
     padding: var(--space-md) var(--space-lg);
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     min-width: 140px;
 }
 
@@ -176,7 +188,7 @@ body {
     padding: var(--space-lg);
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
 }
 
 .filter-group {
@@ -200,20 +212,19 @@ body {
 .filter-group input[type="text"],
 .filter-group select {
     padding: var(--space-sm) var(--space-md);
-    background: var(--bg-dark);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-display);
     font-size: 0.95rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s;
 }
 
 .filter-group input[type="text"]:focus,
 .filter-group select:focus {
     outline: none;
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .filter-group.checkbox-group {
@@ -230,8 +241,8 @@ body {
     gap: var(--space-sm);
     cursor: pointer;
     padding: var(--space-sm) var(--space-md);
-    background: var(--bg-dark);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     transition: border-color 0.2s;
 }
@@ -255,24 +266,23 @@ body {
 
 .filter-button {
     padding: var(--space-sm) var(--space-lg);
-    background: var(--accent-primary);
-    border: none;
+    background: var(--btn-green);
+    border: 1px solid var(--btn-green-dark);
     border-radius: var(--radius-sm);
-    color: var(--bg-dark);
+    color: #1a1a1a;
     font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: all 0.2s;
 }
 
 .filter-button:hover {
-    background: var(--accent-secondary);
-    transform: translateY(-1px);
+    background: var(--btn-green-hover);
 }
 
 .filter-button:active {
-    transform: translateY(0);
+    background: var(--btn-green-dark);
 }
 
 /* Server Stats */
@@ -301,7 +311,7 @@ body {
 
 .sort-button {
     padding: var(--space-xs) var(--space-sm);
-    background: transparent;
+    background: var(--bg-inset);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
@@ -313,14 +323,14 @@ body {
 
 .sort-button:hover {
     border-color: var(--accent-primary);
-    color: var(--text-primary);
+    color: var(--accent-primary);
 }
 
 .sort-button.active {
     background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: var(--bg-dark);
-    font-weight: 500;
+    border-color: var(--accent-dark);
+    color: #1a1a1a;
+    font-weight: 600;
 }
 
 .sort-arrow {
@@ -339,7 +349,7 @@ body {
 
 .view-btn {
     padding: var(--space-xs) var(--space-sm);
-    background: transparent;
+    background: var(--bg-inset);
     border: 1px solid var(--border-subtle);
     color: var(--text-secondary);
     font-size: 1rem;
@@ -359,13 +369,13 @@ body {
 
 .view-btn:hover {
     border-color: var(--accent-primary);
-    color: var(--text-primary);
+    color: var(--accent-primary);
 }
 
 .view-btn.active {
     background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: var(--bg-dark);
+    border-color: var(--accent-dark);
+    color: #1a1a1a;
 }
 
 /* Server Grid */
@@ -466,16 +476,16 @@ body {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-sm) var(--space-md);
-    background: var(--bg-dark);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     position: sticky;
     top: 0;
     z-index: 10;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     color: var(--text-secondary);
 }
 
@@ -511,16 +521,15 @@ body {
     color: inherit;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: var(--space-lg);
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 .server-card:hover {
-    transform: translateY(-2px);
     border-color: var(--accent-primary);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--accent-glow);
+    background: var(--bg-elevated);
 }
 
 .server-header {
@@ -638,7 +647,7 @@ body {
 
 .server-details {
     background: var(--bg-card);
-    border: 1px solid var(--border-accent);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     max-width: 700px;
     width: 100%;
@@ -663,8 +672,8 @@ body {
     position: absolute;
     top: var(--space-md);
     right: var(--space-md);
-    background: var(--bg-dark);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
     width: 36px;
@@ -675,9 +684,9 @@ body {
 }
 
 .close-button:hover {
-    background: var(--accent-primary);
-    color: var(--bg-dark);
-    border-color: var(--accent-primary);
+    background: var(--btn-green);
+    color: #1a1a1a;
+    border-color: var(--btn-green-dark);
 }
 
 .details-header {
@@ -744,8 +753,9 @@ body {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: var(--bg-dark);
-    border-radius: var(--radius-md);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
 }
 
 .stat-card .stat-icon {
@@ -806,13 +816,13 @@ body {
     gap: 2px;
     height: 80px;
     padding: var(--space-sm);
-    background: var(--bg-dark);
+    background: var(--bg-inset);
     border-radius: var(--radius-md);
 }
 
 .history-bar {
     flex: 1;
-    background: linear-gradient(to top, var(--accent-primary), var(--accent-secondary));
+    background: var(--accent-primary);
     border-radius: 2px 2px 0 0;
     min-height: 2px;
     transition: opacity 0.2s;
@@ -852,17 +862,28 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: var(--space-xs) var(--space-sm);
-    background: var(--bg-dark);
+    background: var(--bg-inset);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.mod-item:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
 }
 
 .mod-name {
-    color: var(--text-primary);
+    color: var(--accent-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.mod-item:hover .mod-name {
+    color: var(--accent-secondary);
 }
 
 .mod-version {
