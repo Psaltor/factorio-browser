@@ -2,3 +2,5 @@
 .env
 *.log
 tailwindcss
+.shuttle*
+Secrets*.toml
