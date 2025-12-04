@@ -9,11 +9,22 @@ pub struct HistoryEntry {
     pub recorded_at: String,
 }
 
+/// Mod info for display
+#[derive(Clone, PartialEq)]
+pub struct ModEntry {
+    pub name: String,
+    pub version: String,
+}
+
 #[derive(Properties, PartialEq, Clone)]
 pub struct ServerDetailsProps {
     pub server: CachedServer,
     #[prop_or_default]
     pub history: Vec<HistoryEntry>,
+    #[prop_or_default]
+    pub players: Vec<String>,
+    #[prop_or_default]
+    pub mods: Vec<ModEntry>,
 }
 
 /// Detailed server view component (SSR-compatible, standalone page)
@@ -140,13 +151,33 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     html! {}
                 }}
                 
-                {if server.player_count > 0 {
+                {if !props.players.is_empty() {
                     html! {
                         <section class="details-section">
                             <h3>{"Online Players"}</h3>
                             <div class="player-list">
-                                {for server.players.iter().map(|player| {
+                                {for props.players.iter().map(|player| {
                                     html! { <span class="player-name">{player}</span> }
+                                })}
+                            </div>
+                        </section>
+                    }
+                } else {
+                    html! {}
+                }}
+                
+                {if !props.mods.is_empty() {
+                    html! {
+                        <section class="details-section">
+                            <h3>{format!("Mods ({})", props.mods.len())}</h3>
+                            <div class="mods-list">
+                                {for props.mods.iter().map(|m| {
+                                    html! { 
+                                        <div class="mod-item">
+                                            <span class="mod-name">{&m.name}</span>
+                                            <span class="mod-version">{&m.version}</span>
+                                        </div>
+                                    }
                                 })}
                             </div>
                         </section>

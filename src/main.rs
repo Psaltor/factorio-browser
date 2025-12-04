@@ -80,9 +80,23 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
 /// Server details page
 #[get("/server/<game_id>")]
 async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
-    use factory_tracker::components::server_details::HistoryEntry;
+    use factory_tracker::components::server_details::{HistoryEntry, ModEntry};
     
+    // Get cached server data
     let server = state.db.get_server(game_id).await.ok().flatten();
+    
+    // Fetch fresh details from API for players and mods
+    let (players, mods) = match state.factorio_client.get_game_details(game_id).await {
+        Ok(details) => (
+            details.players,
+            details.mods.into_iter().map(|m| ModEntry {
+                name: m.name,
+                version: m.version,
+            }).collect(),
+        ),
+        Err(_) => (Vec::new(), Vec::new()),
+    };
+    
     let history = state
         .db
         .get_server_history(game_id, 24)
@@ -101,6 +115,8 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
             let props = factory_tracker::components::server_details::ServerDetailsProps { 
                 server, 
                 history,
+                players,
+                mods,
             };
             let renderer = ServerRenderer::<ServerDetails>::with_props(move || props.clone());
             let html_content = renderer.render().await;
