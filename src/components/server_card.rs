@@ -1,4 +1,5 @@
 use crate::db::models::CachedServer;
+use crate::utils::parse_rich_text;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -37,7 +38,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
     html! {
         <a href={details_url} class="server-card">
             <div class="server-header">
-                <h3 class="server-name">{&server.name}</h3>
+                <h3 class="server-name">{parse_rich_text(&server.name)}</h3>
                 {if server.has_password {
                     html! { <span class="password-badge" title="Password Protected">{"🔒"}</span> }
                 } else {
@@ -79,7 +80,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
             
             {if !server.description.is_empty() {
                 html! {
-                    <p class="server-description">{&server.description}</p>
+                    <p class="server-description">{parse_rich_text(&server.description)}</p>
                 }
             } else {
                 html! {}

@@ -1,4 +1,5 @@
 use crate::db::models::CachedServer;
+use crate::utils::parse_rich_text;
 use yew::prelude::*;
 
 /// Player count history entry for display
@@ -49,7 +50,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
             
             <div class="server-details">
                 <header class="details-header">
-                    <h2>{&server.name}</h2>
+                    <h2>{parse_rich_text(&server.name)}</h2>
                     {if server.has_password {
                         html! { <span class="password-badge large">{"🔒 Password Protected"}</span> }
                     } else {
@@ -61,7 +62,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     html! {
                         <section class="details-section">
                             <h3>{"Description"}</h3>
-                            <p class="description">{&server.description}</p>
+                            <p class="description">{parse_rich_text(&server.description)}</p>
                         </section>
                     }
                 } else {
