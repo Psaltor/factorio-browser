@@ -32,7 +32,7 @@ pub fn app(props: &AppProps) -> Html {
             <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
                 <div class="max-w-[1400px] mx-auto text-center mb-6">
                     <a href="/" class="inline-block" title="Home">
-                        <img src="https://cdn.factorio.com/assets/img/web/factorio-logo.png" alt="Factorio" class="h-16 mx-auto" />
+                        <img src="https://lambs.cafe/wp-content/uploads/2025/12/factorio-logo.png" alt="Factorio" class="h-16 mx-auto" />
                     </a>
                     <h1 class="text-3xl font-bold text-text-bright mt-2">{"Server Browser"}</h1>
                     <p class="text-text-secondary text-lg mt-2">{"Find and explore public Factorio multiplayer servers"}</p>
