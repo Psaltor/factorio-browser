@@ -1,16 +1,14 @@
-#[macro_use]
-extern crate rocket;
-
 use factory_tracker::api::factorio::FactorioClient;
 use factory_tracker::api::routes::{get_server, get_server_history, get_servers, health};
 use factory_tracker::components::app::{App, AppProps};
 use factory_tracker::components::server_details::ServerDetails;
 use factory_tracker::db::queries::DbClient;
+use factory_tracker::db::models::CachedServer;
 use factory_tracker::utils::strip_all_tags;
 use rocket::form::FromForm;
 use rocket::fs::FileServer;
 use rocket::response::content::RawHtml;
-use rocket::State;
+use rocket::{get, routes, State};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -21,6 +19,8 @@ struct AppState {
     db: Arc<DbClient>,
     factorio_client: Arc<FactorioClient>,
     last_error: Arc<RwLock<Option<String>>>,
+    // Add cached servers
+    cached_servers: Arc<RwLock<Vec<CachedServer>>>,
 }
 
 /// Query parameters for the main page
@@ -74,7 +74,8 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
 /// Main SSR route - renders the Yew app to HTML
 #[get("/?<filters..>")]
 async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<String> {
-    let servers = state.db.get_all_servers().await.unwrap_or_default();
+    // Use cached servers instead of querying DB
+    let servers = state.cached_servers.read().await.clone();
     let error = state.last_error.read().await.clone();
 
     let props = AppProps {
@@ -188,11 +189,16 @@ async fn refresh_servers(state: Arc<AppState>) {
                     eprintln!("Failed to record history: {}", e);
                 }
 
-                // Cache the servers
+                // Cache the servers in DB
                 match state.db.cache_servers(servers).await {
                     Ok(_) => {
                         println!("Cached {} servers", count);
                         *state.last_error.write().await = None;
+                        
+                        // Update in-memory cache from DB
+                        if let Ok(all_servers) = state.db.get_all_servers().await {
+                            *state.cached_servers.write().await = all_servers;
+                        }
                     }
                     Err(e) => {
                         let raw_msg = format!("Failed to cache servers: {}", e);
@@ -220,8 +226,8 @@ async fn refresh_servers(state: Arc<AppState>) {
     }
 }
 
-#[launch]
-async fn rocket() -> _ {
+#[shuttle_runtime::main]
+async fn main() -> shuttle_rocket::ShuttleRocket {
     // Load environment variables
     dotenvy::dotenv().ok();
 
@@ -258,11 +264,12 @@ async fn rocket() -> _ {
     // Initialize Factorio API client
     let factorio_client = FactorioClient::new_shared(username, token);
 
-    // Create application state
+    // Create application state with empty cache
     let app_state = Arc::new(AppState {
         db: db.clone(),
         factorio_client: factorio_client.clone(),
         last_error: Arc::new(RwLock::new(None)),
+        cached_servers: Arc::new(RwLock::new(Vec::new())),
     });
 
     // Start background refresh task
@@ -272,10 +279,12 @@ async fn rocket() -> _ {
     });
 
     // Build Rocket server
-    rocket::build()
+    let rocket = rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
         .mount("/", routes![index, server_details_page, health])
         .mount("/", routes![get_servers, get_server, get_server_history])
-        .mount("/static", FileServer::from("static"))
+        .mount("/static", FileServer::from("static"));
+
+    Ok(rocket.into())
 }
