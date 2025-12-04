@@ -17,6 +17,8 @@ pub struct AppProps {
     pub has_players: bool,
     #[prop_or_default]
     pub no_password: bool,
+    #[prop_or_default]
+    pub tags: String, // Comma-separated list of selected tags
 }
 
 /// Root application component
@@ -61,6 +63,7 @@ pub fn app(props: &AppProps) -> Html {
                     current_version={props.version.clone()}
                     has_players={props.has_players}
                     no_password={props.no_password}
+                    selected_tags={props.tags.clone()}
                 />
             </main>
             

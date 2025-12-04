@@ -1,3 +1,23 @@
+// Tag filtering toggle function
+function toggleTag(tag) {
+    const input = document.getElementById('tags-input');
+    if (!input) return;
+    
+    const currentValue = input.value;
+    const tags = currentValue ? currentValue.split(',').filter(t => t.trim()) : [];
+    
+    const index = tags.indexOf(tag);
+    if (index === -1) {
+        // Add tag
+        tags.push(tag);
+    } else {
+        // Remove tag
+        tags.splice(index, 1);
+    }
+    
+    input.value = tags.join(',');
+}
+
 // Client-side sorting and view toggle for server list
 (function() {
     const grid = document.querySelector('.server-grid');

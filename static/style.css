@@ -229,6 +229,9 @@
   .mx-auto {
     margin-inline: auto;
   }
+  .mt-1 {
+    margin-top: calc(var(--spacing) * 1);
+  }
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
   }
@@ -416,6 +419,9 @@
   .overflow-hidden {
     overflow: hidden;
   }
+  .overflow-x-auto {
+    overflow-x: auto;
+  }
   .overflow-y-auto {
     overflow-y: auto;
   }
@@ -450,10 +456,6 @@
   .border-\[3px\] {
     border-style: var(--tw-border-style);
     border-width: 3px;
-  }
-  .border-t {
-    border-top-style: var(--tw-border-style);
-    border-top-width: 1px;
   }
   .border-b {
     border-bottom-style: var(--tw-border-style);
@@ -490,6 +492,9 @@
   }
   .bg-accent-glow {
     background-color: var(--color-accent-glow);
+  }
+  .bg-accent-primary {
+    background-color: var(--color-accent-primary);
   }
   .bg-bg-card {
     background-color: var(--color-bg-card);
@@ -574,6 +579,9 @@
   }
   .pr-12 {
     padding-right: calc(var(--spacing) * 12);
+  }
+  .pb-1 {
+    padding-bottom: calc(var(--spacing) * 1);
   }
   .pb-6 {
     padding-bottom: calc(var(--spacing) * 6);
@@ -758,6 +766,13 @@
       }
     }
   }
+  .hover\:bg-accent-primary {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-accent-primary);
+      }
+    }
+  }
   .hover\:bg-bg-card {
     &:hover {
       @media (hover: hover) {
@@ -790,6 +805,13 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-accent-secondary);
+      }
+    }
+  }
+  .hover\:text-bg-dark {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-bg-dark);
       }
     }
   }

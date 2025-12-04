@@ -2,6 +2,7 @@ use crate::components::filters::Filters;
 use crate::components::server_card::ServerCard;
 use crate::db::models::CachedServer;
 use semver::Version;
+use std::collections::HashMap;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -19,6 +20,8 @@ pub struct ServerListProps {
     pub has_players: bool,
     #[prop_or_default]
     pub no_password: bool,
+    #[prop_or_default]
+    pub selected_tags: String, // Comma-separated list of selected tags
 }
 
 /// Server list component with filtering (SSR-compatible)
@@ -47,6 +50,42 @@ pub fn server_list(props: &ServerListProps) -> Html {
         ""
     } else {
         &props.current_version
+    };
+
+    // Extract unique tags from all servers with frequency count
+    let mut tag_counts: HashMap<String, usize> = HashMap::new();
+    for server in &props.servers {
+        for tag in &server.tags {
+            *tag_counts.entry(tag.clone()).or_insert(0) += 1;
+        }
+    }
+    
+    // Sort tags by frequency (descending), then alphabetically
+    let mut available_tags: Vec<(String, usize)> = tag_counts.into_iter().collect();
+    available_tags.sort_by(|a, b| {
+        b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))
+    });
+    
+    // Exclude generic/unhelpful tags
+    const EXCLUDED_TAGS: &[&str] = &["", "game", "tags"];
+    
+    // Take top 15 most common tags (excluding unhelpful ones)
+    let available_tags: Vec<String> = available_tags
+        .into_iter()
+        .filter(|(tag, _)| !EXCLUDED_TAGS.contains(&tag.as_str()))
+        .take(15)
+        .map(|(tag, _)| tag)
+        .collect();
+
+    // Parse selected tags from comma-separated string
+    let selected_tags: Vec<String> = if props.selected_tags.is_empty() {
+        Vec::new()
+    } else {
+        props.selected_tags
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
     };
 
     // Filter servers based on props
@@ -79,6 +118,13 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 return false;
             }
 
+            // Tag filter (OR logic - server must have at least one selected tag)
+            if !selected_tags.is_empty() {
+                if !selected_tags.iter().any(|t| s.tags.contains(t)) {
+                    return false;
+                }
+            }
+
             true
         })
         .collect();
@@ -92,6 +138,8 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 no_password={props.no_password}
                 versions={versions}
                 latest_version={latest_version}
+                available_tags={available_tags}
+                selected_tags={selected_tags}
             />
             
             {if props.loading {

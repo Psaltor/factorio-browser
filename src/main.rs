@@ -30,6 +30,7 @@ struct IndexFilters {
     version: Option<String>,
     has_players: Option<bool>,
     no_password: Option<bool>,
+    tags: Option<String>, // Comma-separated list of tags for OR filtering
 }
 
 /// Wrap HTML content with the page shell, optionally with video background
@@ -83,6 +84,7 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
         version: filters.version.unwrap_or_default(),
         has_players: filters.has_players.unwrap_or(false),
         no_password: filters.no_password.unwrap_or(false),
+        tags: filters.tags.unwrap_or_default(),
     };
 
     let renderer = ServerRenderer::<App>::with_props(move || props.clone());
