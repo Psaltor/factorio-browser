@@ -227,26 +227,26 @@ async fn refresh_servers(state: Arc<AppState>) {
 }
 
 #[shuttle_runtime::main]
-async fn main() -> shuttle_rocket::ShuttleRocket {
+async fn main(#[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore) -> shuttle_rocket::ShuttleRocket {
     // Load environment variables
     dotenvy::dotenv().ok();
 
-    // Get configuration from environment
-    let username = std::env::var("FACTORIO_USERNAME").unwrap_or_else(|_| {
+    // Get configuration from secrets
+    let username = secrets.get("FACTORIO_USERNAME").unwrap_or_else(|| {
         eprintln!("Warning: FACTORIO_USERNAME not set, API calls will fail");
         String::new()
     });
 
-    let token = std::env::var("FACTORIO_TOKEN").unwrap_or_else(|_| {
+    let token = secrets.get("FACTORIO_TOKEN").unwrap_or_else(|| {
         eprintln!("Warning: FACTORIO_TOKEN not set, API calls will fail");
         String::new()
     });
 
-    let db_url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "mem://".to_string());
-    let db_ns = std::env::var("SURREAL_NS").unwrap_or_else(|_| "factorio".to_string());
-    let db_name = std::env::var("SURREAL_DB").unwrap_or_else(|_| "tracker".to_string());
-    let db_user = std::env::var("SURREAL_USER").ok();
-    let db_pass = std::env::var("SURREAL_PASS").ok();
+    let db_url = secrets.get("SURREAL_URL").unwrap_or_else(|| "mem://".to_string());
+    let db_ns = secrets.get("SURREAL_NS").unwrap_or_else(|| "factorio".to_string());
+    let db_name = secrets.get("SURREAL_DB").unwrap_or_else(|| "tracker".to_string());
+    let db_user = secrets.get("SURREAL_USER");
+    let db_pass = secrets.get("SURREAL_PASS");
 
     // Initialize database
     let db = DbClient::connect(
