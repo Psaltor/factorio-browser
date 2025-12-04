@@ -92,9 +92,16 @@ fn factorio_color_to_css(color: &str) -> String {
         "purple" => "#800080".to_string(),
         "brown" => "#8b4513".to_string(),
         "acid" => "#b0ff00".to_string(),
-        // Factorio specific colors
         "default" => "inherit".to_string(),
-        _ => color.to_string(), // Pass through unknown colors
+        _ => {
+            // Only allow valid 6-digit hex colors, reject everything else for security
+            let cleaned = color.trim_start_matches('#');
+            if cleaned.len() == 6 && cleaned.chars().all(|c| c.is_ascii_hexdigit()) {
+                format!("#{}", cleaned)
+            } else {
+                "inherit".to_string()
+            }
+        }
     }
 }
 
