@@ -213,10 +213,16 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                 }}
                 
                 {if let Some(ref addr) = server.host_address {
+                    let join_url = format!("steam://run/427520//--mp-connect%20{}", addr);
                     html! {
                         <section class="p-6 px-8 border-b border-border-subtle">
                             <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{"Connection"}</h3>
-                            <code class="block p-4 bg-bg-dark rounded-sm font-mono text-sm text-accent-primary break-all">{addr}</code>
+                            <div class="flex items-center gap-4">
+                                <code class="flex-1 p-4 bg-bg-dark rounded-sm font-mono text-sm text-accent-primary break-all">{addr}</code>
+                                <a href={join_url} class="py-2 px-6 bg-btn-green border border-btn-green-dark rounded-sm text-bg-dark font-display text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-btn-green-hover active:bg-btn-green-dark no-underline">
+                                    {"Join"}
+                                </a>
+                            </div>
                         </section>
                     }
                 } else {
