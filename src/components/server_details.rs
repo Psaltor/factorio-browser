@@ -44,15 +44,28 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
         format!("{}h {}m", hours, minutes)
     };
 
-    // Calculate history stats
-    let history_stats = if !props.history.is_empty() {
+    // Calculate history stats and aggregate into 24 hourly buckets
+    let (history_stats, hourly_data) = if !props.history.is_empty() {
         let counts: Vec<usize> = props.history.iter().map(|h| h.player_count).collect();
         let max = *counts.iter().max().unwrap_or(&0);
         let min = *counts.iter().min().unwrap_or(&0);
         let avg = counts.iter().sum::<usize>() / counts.len();
-        Some((min, max, avg))
+        
+        // Aggregate into 24 hourly buckets (newest first in history)
+        // Each bucket represents ~60 data points (1 per minute for 1 hour)
+        let bucket_size = (props.history.len() / 24).max(1);
+        let hourly: Vec<usize> = props.history
+            .chunks(bucket_size)
+            .take(24)
+            .map(|chunk| {
+                // Average of the chunk
+                chunk.iter().map(|h| h.player_count).sum::<usize>() / chunk.len().max(1)
+            })
+            .collect();
+        
+        (Some((min, max, avg)), hourly)
     } else {
-        None
+        (None, Vec::new())
     };
 
     html! {
@@ -115,6 +128,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                 </section>
                 
                 {if let Some((min, max, avg)) = history_stats {
+                    let chart_max = hourly_data.iter().max().copied().unwrap_or(1).max(1);
                     html! {
                         <section class="details-section">
                             <h3>{"Player Activity (Last 24h)"}</h3>
@@ -133,15 +147,11 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                                 </div>
                             </div>
                             <div class="history-chart">
-                                {for props.history.iter().rev().take(24).map(|h| {
-                                    let height = if max > 0 {
-                                        (h.player_count as f32 / max as f32 * 100.0) as u32
-                                    } else {
-                                        0
-                                    };
+                                {for hourly_data.iter().rev().map(|&count| {
+                                    let height = (count as f32 / chart_max as f32 * 100.0) as u32;
                                     let height_style = format!("height: {}%", height.max(2));
                                     html! {
-                                        <div class="history-bar" style={height_style} title={format!("{} players", h.player_count)}></div>
+                                        <div class="history-bar" style={height_style} title={format!("{} players (avg)", count)}></div>
                                     }
                                 })}
                             </div>
@@ -172,11 +182,12 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                             <h3>{format!("Mods ({})", props.mods.len())}</h3>
                             <div class="mods-list">
                                 {for props.mods.iter().map(|m| {
+                                    let mod_url = format!("https://mods.factorio.com/mod/{}", m.name);
                                     html! { 
-                                        <div class="mod-item">
+                                        <a href={mod_url} class="mod-item" target="_blank" rel="noopener noreferrer">
                                             <span class="mod-name">{&m.name}</span>
                                             <span class="mod-version">{&m.version}</span>
-                                        </div>
+                                        </a>
                                     }
                                 })}
                             </div>
