@@ -48,6 +48,7 @@ fn html_shell(title: &str, content: String) -> String {
 </head>
 <body>
     {content}
+    <script src="/static/sort.js" defer></script>
 </body>
 </html>"#,
         title = title,

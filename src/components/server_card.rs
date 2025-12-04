@@ -36,7 +36,9 @@ pub fn server_card(props: &ServerCardProps) -> Html {
     let details_url = format!("/server/{}", server.game_id);
 
     html! {
-        <a href={details_url} class="server-card">
+        <a href={details_url} class="server-card" 
+           data-players={server.player_count.to_string()} 
+           data-time={server.game_time_elapsed.to_string()}>
             <div class="server-header">
                 <h3 class="server-name">{parse_rich_text(&server.name)}</h3>
                 {if server.has_password {

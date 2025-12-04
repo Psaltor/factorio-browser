@@ -112,6 +112,16 @@ pub fn server_list(props: &ServerListProps) -> Html {
                     <>
                         <div class="server-stats">
                             <span>{format!("Showing {} of {} servers", filtered_servers.len(), props.servers.len())}</span>
+                            
+                            <div class="sort-bar">
+                                <span class="sort-label">{"Sort by:"}</span>
+                                <button type="button" class="sort-button active" data-sort="players" data-dir="desc">
+                                    {"Players "}<span class="sort-arrow">{"▼"}</span>
+                                </button>
+                                <button type="button" class="sort-button" data-sort="time">
+                                    {"Game Time "}<span class="sort-arrow">{""}</span>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="server-grid">
