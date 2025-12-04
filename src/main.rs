@@ -137,16 +137,16 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
         }
         None => {
             let html_content = r#"
-                <div class="app">
-                    <header class="app-header">
-                        <div class="header-content">
-                            <h1 class="app-title">Server Not Found</h1>
+                <div class="min-h-screen flex flex-col">
+                    <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
+                        <div class="max-w-[1400px] mx-auto text-center">
+                            <h1 class="text-4xl font-bold text-text-bright">Server Not Found</h1>
                         </div>
                     </header>
-                    <main class="app-main">
-                        <div class="error">
-                            <p>The requested server could not be found.</p>
-                            <a href="/">← Back to Server List</a>
+                    <main class="flex-1 max-w-[1400px] mx-auto py-8 px-6 w-full">
+                        <div class="text-center py-8 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
+                            <p class="mb-4">The requested server could not be found.</p>
+                            <a href="/" class="text-accent-primary hover:text-accent-secondary transition-colors duration-200">← Back to Server List</a>
                         </div>
                     </main>
                 </div>

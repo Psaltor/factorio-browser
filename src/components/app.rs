@@ -25,35 +25,35 @@ pub fn app(props: &AppProps) -> Html {
     let servers_with_players = props.servers.iter().filter(|s| s.player_count > 0).count();
 
     html! {
-        <div class="app">
-            <header class="app-header">
-                <div class="header-content">
-                    <h1 class="app-title">
-                        <a href="/" class="home-link" title="Home">
-                            <img src="/static/favicon.svg" alt="Home" class="title-icon spinning" />
+        <div class="min-h-screen flex flex-col">
+            <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
+                <div class="max-w-[1400px] mx-auto text-center mb-6">
+                    <h1 class="text-4xl font-bold text-text-bright flex items-center justify-center gap-2">
+                        <a href="/" class="flex items-center" title="Home">
+                            <img src="/static/favicon.svg" alt="Home" class="w-8 h-8 animate-spin-slow hover:animate-spin-fast" />
                         </a>
                         {"Factorio Server Browser"}
                     </h1>
-                    <p class="app-subtitle">{"Find and explore public Factorio multiplayer servers"}</p>
+                    <p class="text-text-secondary text-lg mt-2">{"Find and explore public Factorio multiplayer servers"}</p>
                 </div>
                 
-                <div class="global-stats">
-                    <div class="stat">
-                        <span class="stat-number">{props.servers.len()}</span>
-                        <span class="stat-label">{"Total Servers"}</span>
+                <div class="flex justify-center gap-8 flex-wrap">
+                    <div class="text-center py-4 px-6 bg-bg-card border border-border-subtle rounded-sm min-w-[140px]">
+                        <span class="block text-[2rem] font-semibold text-accent-primary font-mono">{props.servers.len()}</span>
+                        <span class="block text-[0.85rem] text-text-secondary uppercase tracking-wider">{"Total Servers"}</span>
                     </div>
-                    <div class="stat">
-                        <span class="stat-number">{servers_with_players}</span>
-                        <span class="stat-label">{"Active Servers"}</span>
+                    <div class="text-center py-4 px-6 bg-bg-card border border-border-subtle rounded-sm min-w-[140px]">
+                        <span class="block text-[2rem] font-semibold text-accent-primary font-mono">{servers_with_players}</span>
+                        <span class="block text-[0.85rem] text-text-secondary uppercase tracking-wider">{"Active Servers"}</span>
                     </div>
-                    <div class="stat">
-                        <span class="stat-number">{total_players}</span>
-                        <span class="stat-label">{"Players Online"}</span>
+                    <div class="text-center py-4 px-6 bg-bg-card border border-border-subtle rounded-sm min-w-[140px]">
+                        <span class="block text-[2rem] font-semibold text-accent-primary font-mono">{total_players}</span>
+                        <span class="block text-[0.85rem] text-text-secondary uppercase tracking-wider">{"Players Online"}</span>
                     </div>
                 </div>
             </header>
             
-            <main class="app-main">
+            <main class="flex-1 max-w-[1400px] mx-auto py-8 px-6 w-full">
                 <ServerList 
                     servers={props.servers.clone()}
                     error={props.error.clone()}
@@ -64,7 +64,7 @@ pub fn app(props: &AppProps) -> Html {
                 />
             </main>
             
-            <footer class="app-footer">
+            <footer class="text-center p-6 text-text-muted text-sm border-t border-border-subtle">
                 <p>{"Data from Factorio Matchmaking API • Not affiliated with Wube Software"}</p>
             </footer>
         </div>

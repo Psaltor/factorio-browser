@@ -32,21 +32,22 @@ pub fn filters(props: &FiltersProps) -> Html {
     let is_all_selected = props.current_version == "all";
 
     html! {
-        <form class="filters" method="get" action="/">
-            <div class="filter-group search-group">
-                <label for="search">{"Search"}</label>
+        <form class="flex flex-wrap items-end gap-4 mb-8 p-6 bg-bg-card/85 backdrop-blur-[10px] border border-border-subtle rounded-md" method="get" action="/">
+            <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
+                <label for="search" class="text-xs text-text-secondary uppercase tracking-wider">{"Search"}</label>
                 <input 
                     type="text" 
                     id="search"
                     name="search"
                     placeholder="Search servers..."
                     value={props.current_search.clone()}
+                    class="py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary"
                 />
             </div>
             
-            <div class="filter-group">
-                <label for="version">{"Version"}</label>
-                <select id="version" name="version">
+            <div class="flex flex-col gap-1">
+                <label for="version" class="text-xs text-text-secondary uppercase tracking-wider">{"Version"}</label>
+                <select id="version" name="version" class="py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary">
                     <option value="" selected={is_latest_selected}>
                         {format!("Latest ({})", props.latest_version)}
                     </option>
@@ -61,32 +62,36 @@ pub fn filters(props: &FiltersProps) -> Html {
                 </select>
             </div>
             
-            <div class="filter-group checkbox-group">
-                <label>
+            <div class="flex flex-col gap-1 justify-end">
+                <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
                     <input 
                         type="checkbox" 
                         name="has_players"
                         value="true"
                         checked={props.has_players}
+                        class="accent-accent-primary w-4 h-4"
                     />
-                    <span>{"Has Players"}</span>
+                    <span class="text-sm text-text-primary">{"Has Players"}</span>
                 </label>
             </div>
             
-            <div class="filter-group checkbox-group">
-                <label>
+            <div class="flex flex-col gap-1 justify-end">
+                <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
                     <input 
                         type="checkbox" 
                         name="no_password"
                         value="true"
                         checked={props.no_password}
+                        class="accent-accent-primary w-4 h-4"
                     />
-                    <span>{"No Password"}</span>
+                    <span class="text-sm text-text-primary">{"No Password"}</span>
                 </label>
             </div>
             
-            <div class="filter-group">
-                <button type="submit" class="filter-button">{"Apply Filters"}</button>
+            <div class="flex flex-col gap-1 justify-end">
+                <button type="submit" class="py-2 px-6 bg-btn-green border border-btn-green-dark rounded-sm text-bg-dark font-display text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-btn-green-hover active:bg-btn-green-dark">
+                    {"Apply Filters"}
+                </button>
             </div>
         </form>
     }

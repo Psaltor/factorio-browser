@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/* Custom theme configuration for Factorio */
+@theme {
+  /* Background colors */
+  --color-bg-dark: #1a1a1a;
+  --color-bg-card: #3c3c3c;
+  --color-bg-elevated: #4a4a4a;
+  --color-bg-hover: #505050;
+  --color-bg-inset: #2d2d2d;
+  --color-bg-overlay: rgba(26, 26, 26, 0.95);
+  
+  /* Border colors */
+  --color-border-dark: #333333;
+  --color-border-subtle: #555555;
+  --color-border-accent: #666666;
+  --color-border-light: #777777;
+  
+  /* Cyan accent */
+  --color-accent-primary: #5cb3c1;
+  --color-accent-secondary: #7ec8d3;
+  --color-accent-dark: #4a9aa6;
+  --color-accent-glow: rgba(92, 179, 193, 0.2);
+  
+  /* Green CTA buttons */
+  --color-btn-green: #7fcd33;
+  --color-btn-green-hover: #8fd94a;
+  --color-btn-green-dark: #5ea523;
+  
+  /* Status colors */
+  --color-status-full: #ff4444;
+  --color-status-medium: #ffaa00;
+  --color-status-low: #7fcd33;
+  --color-status-empty: #666666;
+  
+  /* Text colors */
+  --color-text-primary: #d4d4d4;
+  --color-text-secondary: #888888;
+  --color-text-muted: #666666;
+  --color-text-bright: #ffffff;
+
+  /* Fonts */
+  --font-display: 'Titillium Web', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Custom animations */
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-spin-fast: spin 1s linear infinite;
+  --animate-fade-in: fadeIn 0.2s ease-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Base styles */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Titillium Web', system-ui, sans-serif;
+    background: #1a1a1a;
+    color: #d4d4d4;
+    line-height: 1.5;
+    min-height: 100vh;
+    font-weight: 400;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Video background - needs fixed positioning */
+  .video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.3;
+  }
+
+  /* History chart bars */
+  .history-bar {
+    flex: 1;
+    background: var(--color-accent-primary);
+    border-radius: 2px 2px 0 0;
+    transition: opacity 0.2s;
+    min-height: 2px;
+  }
+
+  .history-bar:hover {
+    opacity: 0.8;
+  }
+
+  /* Sort button active state (toggled by JavaScript) */
+  .sort-button.active {
+    background: var(--color-accent-primary) !important;
+    border-color: var(--color-accent-dark) !important;
+    color: var(--color-bg-dark) !important;
+    font-weight: 600 !important;
+  }
+
+  /* View button active state (toggled by JavaScript) */
+  .view-btn.active {
+    background: var(--color-accent-primary) !important;
+    border-color: var(--color-accent-dark) !important;
+    color: var(--color-bg-dark) !important;
+  }
+
+  /* List view mode (toggled by JavaScript) */
+  .server-grid.list-view {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+  }
+
+  .server-grid.list-view .list-header {
+    display: flex !important;
+  }
+
+  .server-grid.list-view .server-card {
+    display: none !important;
+  }
+
+  .server-grid.list-view .server-row {
+    display: flex !important;
+  }
+
+  /* Scrollbar styling for mods list */
+  .mods-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .mods-list::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+  }
+  
+  .mods-list::-webkit-scrollbar-thumb {
+    background: #555555;
+    border-radius: 4px;
+  }
+  
+  .mods-list::-webkit-scrollbar-thumb:hover {
+    background: #666666;
+  }
+}
+
+/* Custom utilities */
+@utility line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

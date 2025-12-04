@@ -84,7 +84,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
         .collect();
 
     html! {
-        <div class="server-list-container">
+        <div>
             <Filters 
                 current_search={props.current_search.clone()}
                 current_version={props.current_version.clone()}
@@ -96,46 +96,46 @@ pub fn server_list(props: &ServerListProps) -> Html {
             
             {if props.loading {
                 html! {
-                    <div class="loading">
-                        <div class="spinner"></div>
+                    <div class="text-center py-12">
+                        <div class="w-12 h-12 border-[3px] border-border-accent border-t-accent-primary rounded-full animate-spin mx-auto mb-4"></div>
                         <p>{"Loading servers..."}</p>
                     </div>
                 }
             } else if let Some(ref error) = props.error {
                 html! {
-                    <div class="error">
+                    <div class="text-center py-8 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
                         <p>{"Error loading servers: "}{error}</p>
                     </div>
                 }
             } else {
                 html! {
                     <>
-                        <div class="server-stats">
+                        <div class="flex justify-between items-center flex-wrap gap-4 mb-4 text-text-secondary text-sm">
                             <span>{format!("Showing {} of {} servers", filtered_servers.len(), props.servers.len())}</span>
                             
-                            <div class="sort-bar">
-                                <span class="sort-label">{"Sort by:"}</span>
-                                <button type="button" class="sort-button active" data-sort="players" data-dir="desc">
-                                    {"Players "}<span class="sort-arrow">{"▼"}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-text-muted text-[0.85rem]">{"Sort by:"}</span>
+                                <button type="button" class="sort-button active py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="players" data-dir="desc">
+                                    {"Players "}<span class="sort-arrow text-xs ml-0.5">{"▼"}</span>
                                 </button>
-                                <button type="button" class="sort-button" data-sort="time">
-                                    {"Game Time "}<span class="sort-arrow">{""}</span>
+                                <button type="button" class="sort-button py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="time">
+                                    {"Game Time "}<span class="sort-arrow text-xs ml-0.5">{""}</span>
                                 </button>
                                 
-                                <div class="view-toggle">
-                                    <button type="button" class="view-btn active" data-view="grid" title="Grid view">{"▦"}</button>
-                                    <button type="button" class="view-btn" data-view="list" title="List view">{"☰"}</button>
+                                <div class="flex gap-0.5 ml-4 pl-4 border-l border-border-subtle">
+                                    <button type="button" class="view-btn active py-1 px-2 bg-bg-inset border border-border-subtle text-text-secondary text-base cursor-pointer transition-all duration-200 leading-none rounded-l-sm hover:border-accent-primary hover:text-accent-primary" data-view="grid" title="Grid view">{"▦"}</button>
+                                    <button type="button" class="view-btn py-1 px-2 bg-bg-inset border border-border-subtle border-l-0 text-text-secondary text-base cursor-pointer transition-all duration-200 leading-none rounded-r-sm hover:border-accent-primary hover:text-accent-primary" data-view="list" title="List view">{"☰"}</button>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="server-grid">
-                            <div class="list-header">
-                                <span class="header-name">{"Name"}</span>
-                                <span class="header-players">{"Players"}</span>
-                                <span class="header-version">{"Version"}</span>
-                                <span class="header-time">{"Time"}</span>
-                                <span class="header-mods">{"Mods"}</span>
+                        <div class="server-grid grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
+                            <div class="list-header hidden items-center gap-4 py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm sticky top-0 z-10 text-xs font-semibold uppercase tracking-widest text-text-secondary">
+                                <span class="flex-1 min-w-0">{"Name"}</span>
+                                <span class="w-[60px] text-center">{"Players"}</span>
+                                <span class="w-[70px] text-center">{"Version"}</span>
+                                <span class="w-[80px] text-center">{"Time"}</span>
+                                <span class="w-[80px] text-right">{"Mods"}</span>
                             </div>
                             {for filtered_servers.iter().map(|server| {
                                 html! {
@@ -148,7 +148,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                         
                         {if filtered_servers.is_empty() {
                             html! {
-                                <div class="no-results">
+                                <div class="text-center py-12 text-text-muted">
                                     <p>{"No servers match your filters"}</p>
                                 </div>
                             }
