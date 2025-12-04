@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="gearGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5a623"/>
+      <stop offset="100%" style="stop-color:#e8912d"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer gear teeth -->
+  <path fill="url(#gearGrad)" d="
+    M50 5
+    L55 5 L57 15 L62 16 L68 8 L73 11 L70 21 L74 24 L82 18 L86 23 L79 30 L82 35 L92 33 L94 39 L85 43 L85 48 L95 50
+    L95 55 L85 57 L85 62 L94 66 L92 72 L82 70 L79 75 L86 82 L82 87 L74 81 L70 84 L73 94 L68 97 L62 89 L57 90 L55 100
+    L45 100 L43 90 L38 89 L32 97 L27 94 L30 84 L26 81 L18 87 L14 82 L21 75 L18 70 L8 72 L6 66 L15 62 L15 57 L5 55
+    L5 50 L15 48 L15 43 L6 39 L8 33 L18 35 L21 30 L14 23 L18 18 L26 24 L30 21 L27 11 L32 8 L38 16 L43 15 L45 5
+    Z
+  "/>
+  <!-- Inner circle cutout -->
+  <circle cx="50" cy="52.5" r="22" fill="#0a0c0f"/>
+  <!-- Center hub -->
+  <circle cx="50" cy="52.5" r="12" fill="url(#gearGrad)"/>
+  <!-- Center hole -->
+  <circle cx="50" cy="52.5" r="5" fill="#0a0c0f"/>
+</svg>
+
