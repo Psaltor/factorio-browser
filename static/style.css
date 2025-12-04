@@ -70,13 +70,30 @@
     box-sizing: border-box;
 }
 
+/* Video Background */
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    opacity: 0.3;
+}
+
 body {
     font-family: var(--font-display);
-    background: var(--bg-dark);
+    background: transparent;
     color: var(--text-primary);
     line-height: 1.5;
     min-height: 100vh;
     font-weight: 400;
+}
+
+/* Fallback background when no video */
+body:not(:has(.video-background)) {
+    background: var(--bg-dark);
 }
 
 /* App Layout */
@@ -88,7 +105,8 @@ body {
 
 /* Header */
 .app-header {
-    background: var(--bg-card);
+    background: rgba(60, 60, 60, 0.65);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-subtle);
     padding: var(--space-xl) var(--space-lg);
 }
@@ -186,7 +204,8 @@ body {
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
     padding: var(--space-lg);
-    background: var(--bg-card);
+    background: rgba(60, 60, 60, 0.85);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
 }

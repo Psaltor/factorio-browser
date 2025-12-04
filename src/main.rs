@@ -31,8 +31,18 @@ struct IndexFilters {
     no_password: Option<bool>,
 }
 
-/// Wrap HTML content with the page shell
-fn html_shell(title: &str, content: String) -> String {
+/// Wrap HTML content with the page shell, optionally with video background
+fn html_shell_with_video(title: &str, content: String, with_video: bool) -> String {
+    let video_element = if with_video {
+        r#"<video class="video-background" autoplay muted loop playsinline>
+        <source src="https://lambs.cafe/wp-content/uploads/2025/12/space-age.mp4" type="video/mp4">
+    </video>"#
+    } else {
+        ""
+    };
+    
+    let body_class = if with_video { " class=\"has-video\"" } else { "" };
+    
     format!(
         r#"<!DOCTYPE html>
 <html lang="en">
@@ -46,12 +56,15 @@ fn html_shell(title: &str, content: String) -> String {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body{body_class}>
+    {video}
     {content}
     <script src="/static/sort.js" defer></script>
 </body>
 </html>"#,
         title = title,
+        body_class = body_class,
+        video = video_element,
         content = content
     )
 }
@@ -74,7 +87,7 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
     let renderer = ServerRenderer::<App>::with_props(move || props.clone());
     let html_content = renderer.render().await;
 
-    RawHtml(html_shell("Factorio Server Browser", html_content))
+    RawHtml(html_shell_with_video("Factorio Server Browser", html_content, true))
 }
 
 /// Server details page
@@ -120,7 +133,7 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
             };
             let renderer = ServerRenderer::<ServerDetails>::with_props(move || props.clone());
             let html_content = renderer.render().await;
-            RawHtml(html_shell(&title, html_content))
+            RawHtml(html_shell_with_video(&title, html_content, true))
         }
         None => {
             let html_content = r#"
@@ -139,7 +152,7 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
                 </div>
             "#
             .to_string();
-            RawHtml(html_shell("Server Not Found", html_content))
+            RawHtml(html_shell_with_video("Server Not Found", html_content, true))
         }
     }
 }
