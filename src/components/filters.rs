@@ -20,12 +20,17 @@ pub struct FiltersProps {
     pub no_password: bool,
     #[prop_or_default]
     pub versions: Vec<String>,
+    #[prop_or_default]
+    pub latest_version: String,
 }
 
 /// Filter controls component - renders as a form for SSR
 /// In SSR mode, filters work via form submission / URL parameters
 #[function_component(Filters)]
 pub fn filters(props: &FiltersProps) -> Html {
+    let is_latest_selected = props.current_version.is_empty();
+    let is_all_selected = props.current_version == "all";
+
     html! {
         <form class="filters" method="get" action="/">
             <div class="filter-group search-group">
@@ -42,8 +47,11 @@ pub fn filters(props: &FiltersProps) -> Html {
             <div class="filter-group">
                 <label for="version">{"Version"}</label>
                 <select id="version" name="version">
-                    <option value="" selected={props.current_version.is_empty()}>{"All Versions"}</option>
-                    {for props.versions.iter().map(|v| {
+                    <option value="" selected={is_latest_selected}>
+                        {format!("Latest ({})", props.latest_version)}
+                    </option>
+                    <option value="all" selected={is_all_selected}>{"All Versions"}</option>
+                    {for props.versions.iter().filter(|v| *v != &props.latest_version).map(|v| {
                         html! {
                             <option value={v.clone()} selected={&props.current_version == v}>
                                 {v}

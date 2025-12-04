@@ -16,39 +16,75 @@ fn text_with_newlines(text: &str) -> Html {
     html! { <>{for parts}</> }
 }
 
-/// Parse Factorio rich text color tags like [color=red]text[/color]
+/// Find the next rich text tag ([color=...] or [font=...])
+fn find_next_tag(text: &str) -> Option<(usize, &str)> {
+    let color_pos = text.find("[color=");
+    let font_pos = text.find("[font=");
+    
+    match (color_pos, font_pos) {
+        (Some(c), Some(f)) => {
+            if c < f {
+                Some((c, "color"))
+            } else {
+                Some((f, "font"))
+            }
+        }
+        (Some(c), None) => Some((c, "color")),
+        (None, Some(f)) => Some((f, "font")),
+        (None, None) => None,
+    }
+}
+
+/// Parse Factorio rich text tags: [color=...][/color] and [font=...][/font]
 /// Also converts newlines to <br> tags
 pub fn parse_rich_text(text: &str) -> Html {
     let mut result: Vec<Html> = Vec::new();
     let mut remaining = text;
 
     while !remaining.is_empty() {
-        // Look for [color=...]
-        if let Some(start) = remaining.find("[color=") {
+        if let Some((start, tag_type)) = find_next_tag(remaining) {
             // Add text before the tag
             if start > 0 {
                 let before = &remaining[..start];
                 result.push(text_with_newlines(before));
             }
 
+            let tag_prefix = format!("[{}=", tag_type);
+            let close_tag = format!("[/{}]", tag_type);
+            let prefix_len = tag_prefix.len();
+            let close_len = close_tag.len();
+
             // Find the end of the opening tag
-            let after_start = &remaining[start + 7..]; // skip "[color="
+            let after_start = &remaining[start + prefix_len..];
             if let Some(tag_end) = after_start.find(']') {
-                let color = &after_start[..tag_end];
+                let value = &after_start[..tag_end];
                 let after_tag = &after_start[tag_end + 1..];
 
                 // Find the closing tag
-                if let Some(close) = after_tag.find("[/color]") {
+                if let Some(close) = after_tag.find(&close_tag) {
                     let content = &after_tag[..close];
-                    let css_color = factorio_color_to_css(color);
                     
                     // Recursively parse content (for nested tags)
                     let inner = parse_rich_text(content);
-                    result.push(html! {
-                        <span style={format!("color: {}", css_color)}>{inner}</span>
-                    });
-
-                    remaining = &after_tag[close + 8..]; // skip "[/color]"
+                    
+                    let styled = match tag_type {
+                        "color" => {
+                            let css_color = factorio_color_to_css(value);
+                            html! {
+                                <span style={format!("color: {}", css_color)}>{inner}</span>
+                            }
+                        }
+                        "font" => {
+                            let css_style = factorio_font_to_css(value);
+                            html! {
+                                <span style={css_style}>{inner}</span>
+                            }
+                        }
+                        _ => inner,
+                    };
+                    
+                    result.push(styled);
+                    remaining = &after_tag[close + close_len..];
                     continue;
                 }
             }
@@ -65,6 +101,24 @@ pub fn parse_rich_text(text: &str) -> Html {
     html! { <>{for result}</> }
 }
 
+/// Convert Factorio font names to CSS styles
+fn factorio_font_to_css(font: &str) -> String {
+    match font.to_lowercase().as_str() {
+        "default" => "".to_string(),
+        "default-bold" => "font-weight: 700".to_string(),
+        "default-semibold" => "font-weight: 600".to_string(),
+        "default-small" => "font-size: 0.85em".to_string(),
+        "default-small-bold" => "font-size: 0.85em; font-weight: 700".to_string(),
+        "default-small-semibold" => "font-size: 0.85em; font-weight: 600".to_string(),
+        "default-large" => "font-size: 1.2em".to_string(),
+        "default-large-bold" => "font-size: 1.2em; font-weight: 700".to_string(),
+        "default-large-semibold" => "font-size: 1.2em; font-weight: 600".to_string(),
+        "heading-1" => "font-size: 1.5em; font-weight: 700".to_string(),
+        "heading-2" => "font-size: 1.25em; font-weight: 700".to_string(),
+        _ => "".to_string(), // Default for unknown fonts
+    }
+}
+
 /// Convert Factorio color names/values to CSS colors
 fn factorio_color_to_css(color: &str) -> String {
     // Handle RGB format: r=1,g=0.5,b=0 or just comma-separated values
@@ -74,7 +128,11 @@ fn factorio_color_to_css(color: &str) -> String {
 
     // Handle hex colors
     if color.starts_with('#') {
-        return color.to_string();
+        let cleaned = color.trim_start_matches('#');
+        if cleaned.len() == 6 && cleaned.chars().all(|c| c.is_ascii_hexdigit()) {
+            return color.to_string();
+        }
+        return "inherit".to_string();
     }
 
     // Named colors (Factorio uses these)
@@ -129,4 +187,3 @@ fn parse_rgb_color(color: &str) -> String {
 
     format!("rgb({}, {}, {})", r, g, b)
 }
-

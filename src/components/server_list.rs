@@ -1,6 +1,7 @@
 use crate::components::filters::Filters;
 use crate::components::server_card::ServerCard;
 use crate::db::models::CachedServer;
+use semver::Version;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -23,19 +24,32 @@ pub struct ServerListProps {
 /// Server list component with filtering (SSR-compatible)
 #[function_component(ServerList)]
 pub fn server_list(props: &ServerListProps) -> Html {
-    // Extract unique versions from servers
-    let versions: Vec<String> = {
-        let mut vers: Vec<String> = props
-            .servers
-            .iter()
-            .map(|s| s.game_version.clone())
-            .collect();
-        vers.sort();
-        vers.dedup();
-        vers
+    // Extract unique versions from servers, sorted by semver (descending)
+    let mut versions: Vec<String> = props
+        .servers
+        .iter()
+        .map(|s| s.game_version.clone())
+        .collect();
+    versions.sort_by(|a, b| {
+        let va = Version::parse(a).ok();
+        let vb = Version::parse(b).ok();
+        vb.cmp(&va) // Descending order
+    });
+    versions.dedup();
+
+    // Latest version is first after sorting
+    let latest_version = versions.first().cloned().unwrap_or_default();
+
+    // Determine effective version filter (empty = latest, "all" = no filter)
+    let effective_version = if props.current_version.is_empty() {
+        &latest_version
+    } else if props.current_version == "all" {
+        ""
+    } else {
+        &props.current_version
     };
 
-    // Filter servers based on props (filtering done server-side in SSR)
+    // Filter servers based on props
     let filtered_servers: Vec<&CachedServer> = props
         .servers
         .iter()
@@ -51,7 +65,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
             }
 
             // Version filter
-            if !props.current_version.is_empty() && !s.game_version.starts_with(&props.current_version) {
+            if !effective_version.is_empty() && !s.game_version.starts_with(effective_version) {
                 return false;
             }
 
@@ -77,6 +91,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 has_players={props.has_players}
                 no_password={props.no_password}
                 versions={versions}
+                latest_version={latest_version}
             />
             
             {if props.loading {
