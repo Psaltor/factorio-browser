@@ -6,6 +6,7 @@ use factory_tracker::api::routes::{get_server, get_server_history, get_servers, 
 use factory_tracker::components::app::{App, AppProps};
 use factory_tracker::components::server_details::ServerDetails;
 use factory_tracker::db::queries::DbClient;
+use factory_tracker::utils::strip_all_tags;
 use rocket::form::FromForm;
 use rocket::fs::FileServer;
 use rocket::response::content::RawHtml;
@@ -124,7 +125,7 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
 
     match server {
         Some(server) => {
-            let title = format!("{} - Factorio Server Browser", server.name);
+            let title = format!("{} - Factorio Server Browser", strip_all_tags(&server.name));
             let props = factory_tracker::components::server_details::ServerDetailsProps { 
                 server, 
                 history,
@@ -157,6 +158,20 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
     }
 }
 
+/// Sanitize error messages to remove sensitive information like URLs with credentials
+fn sanitize_error(error: &str) -> String {
+    // Remove URLs that might contain credentials
+    if error.contains("http://") || error.contains("https://") {
+        // Generic error message without exposing the URL
+        if error.contains("get-games") || error.contains("multiplayer.factorio.com") {
+            return "Failed to connect to Factorio API. Please try again later.".to_string();
+        }
+        return "A network error occurred. Please try again later.".to_string();
+    }
+    // For other errors, just return a generic message to be safe
+    "An error occurred while fetching server data.".to_string()
+}
+
 /// Background task to periodically refresh server data
 async fn refresh_servers(state: Arc<AppState>) {
     loop {
@@ -178,9 +193,10 @@ async fn refresh_servers(state: Arc<AppState>) {
                         *state.last_error.write().await = None;
                     }
                     Err(e) => {
-                        let msg = format!("Failed to cache servers: {}", e);
-                        eprintln!("{}", msg);
-                        *state.last_error.write().await = Some(msg);
+                        let raw_msg = format!("Failed to cache servers: {}", e);
+                        eprintln!("{}", raw_msg);
+                        // Display sanitized message to users
+                        *state.last_error.write().await = Some("Failed to update server cache.".to_string());
                     }
                 }
 
@@ -190,9 +206,10 @@ async fn refresh_servers(state: Arc<AppState>) {
                 }
             }
             Err(e) => {
-                let msg = format!("Failed to fetch servers: {}", e);
-                eprintln!("{}", msg);
-                *state.last_error.write().await = Some(msg);
+                let raw_msg = format!("Failed to fetch servers: {}", e);
+                eprintln!("{}", raw_msg);
+                // Display sanitized message to users - never expose raw error with URLs/credentials
+                *state.last_error.write().await = Some(sanitize_error(&raw_msg));
             }
         }
 
@@ -220,11 +237,19 @@ async fn rocket() -> _ {
     let db_url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "mem://".to_string());
     let db_ns = std::env::var("SURREAL_NS").unwrap_or_else(|_| "factorio".to_string());
     let db_name = std::env::var("SURREAL_DB").unwrap_or_else(|_| "tracker".to_string());
+    let db_user = std::env::var("SURREAL_USER").ok();
+    let db_pass = std::env::var("SURREAL_PASS").ok();
 
     // Initialize database
-    let db = DbClient::connect(&db_url, &db_ns, &db_name)
-        .await
-        .expect("Failed to connect to database");
+    let db = DbClient::connect(
+        &db_url,
+        &db_ns,
+        &db_name,
+        db_user.as_deref(),
+        db_pass.as_deref(),
+    )
+    .await
+    .expect("Failed to connect to database");
 
     let db = Arc::new(db);
 

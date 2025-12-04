@@ -17,6 +17,8 @@
     --text-lg--line-height: calc(1.75 / 1.125);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
     --font-weight-normal: 400;
@@ -41,13 +43,13 @@
     --color-bg-inset: #2d2d2d;
     --color-border-subtle: #555555;
     --color-border-accent: #666666;
-    --color-accent-primary: #5cb3c1;
-    --color-accent-secondary: #7ec8d3;
-    --color-accent-dark: #4a9aa6;
+    --color-accent-primary: #f4a200;
+    --color-accent-secondary: #f1be64;
+    --color-accent-dark: #ffa200;
     --color-accent-glow: rgba(92, 179, 193, 0.2);
-    --color-btn-green: #7fcd33;
-    --color-btn-green-hover: #8fd94a;
-    --color-btn-green-dark: #5ea523;
+    --color-btn-green: #5eb663;
+    --color-btn-green-hover: #34be3c;
+    --color-btn-green-dark: #5eb663;
     --color-status-full: #ff4444;
     --color-status-medium: #ffaa00;
     --color-status-low: #7fcd33;
@@ -57,8 +59,6 @@
     --color-text-muted: #666666;
     --color-text-bright: #ffffff;
     --font-display: 'Titillium Web', system-ui, sans-serif;
-    --animate-spin-slow: spin 8s linear infinite;
-    --animate-spin-fast: spin 1s linear infinite;
     --animate-slide-up: slideUp 0.3s ease-out;
   }
 }
@@ -293,11 +293,11 @@
   .h-4 {
     height: calc(var(--spacing) * 4);
   }
-  .h-8 {
-    height: calc(var(--spacing) * 8);
-  }
   .h-12 {
     height: calc(var(--spacing) * 12);
+  }
+  .h-16 {
+    height: calc(var(--spacing) * 16);
   }
   .h-20 {
     height: calc(var(--spacing) * 20);
@@ -313,9 +313,6 @@
   }
   .w-4 {
     width: calc(var(--spacing) * 4);
-  }
-  .w-8 {
-    width: calc(var(--spacing) * 8);
   }
   .w-12 {
     width: calc(var(--spacing) * 12);
@@ -361,9 +358,6 @@
   }
   .animate-spin {
     animation: var(--animate-spin);
-  }
-  .animate-spin-slow {
-    animation: var(--animate-spin-slow);
   }
   .cursor-pointer {
     cursor: pointer;
@@ -603,6 +597,10 @@
     font-size: var(--text-2xl);
     line-height: var(--tw-leading, var(--text-2xl--line-height));
   }
+  .text-3xl {
+    font-size: var(--text-3xl);
+    line-height: var(--tw-leading, var(--text-3xl--line-height));
+  }
   .text-4xl {
     font-size: var(--text-4xl);
     line-height: var(--tw-leading, var(--text-4xl--line-height));
@@ -752,13 +750,6 @@
   .duration-200 {
     --tw-duration: 200ms;
     transition-duration: 200ms;
-  }
-  .hover\:animate-spin-fast {
-    &:hover {
-      @media (hover: hover) {
-        animation: var(--animate-spin-fast);
-      }
-    }
   }
   .hover\:border-accent-primary {
     &:hover {

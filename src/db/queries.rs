@@ -40,17 +40,20 @@ impl DbClient {
         url: &str,
         namespace: &str,
         database: &str,
+        username: Option<&str>,
+        password: Option<&str>,
     ) -> Result<Self, DbError> {
         let db = connect(url)
             .await
             .map_err(|e| DbError::Connection(e.to_string()))?;
 
-        // Sign in as root for local development
-        // In production, use proper authentication
+        // Sign in if credentials are provided (required for remote connections)
         if url.starts_with("ws://") || url.starts_with("wss://") {
+            let user = username.unwrap_or("root");
+            let pass = password.unwrap_or("root");
             db.signin(Root {
-                username: "root",
-                password: "root",
+                username: user,
+                password: pass,
             })
             .await
             .map_err(|e| DbError::Connection(e.to_string()))?;
@@ -109,42 +112,52 @@ impl DbClient {
         Ok(())
     }
 
-    /// Cache a list of servers from the API
+    /// Cache a list of servers from the API (batch operation)
     pub async fn cache_servers(&self, servers: Vec<GameServer>) -> Result<usize, DbError> {
-        let mut count = 0;
-
-        for server in servers {
-            let new_server: NewCachedServer = server.into();
-            let game_id = new_server.game_id;
-
-            // Delete existing server with this game_id
-            self.db
-                .query("DELETE FROM servers WHERE game_id = $game_id")
-                .bind(("game_id", game_id))
-                .await?;
-
-            // Create new server record
-            let _: Option<CachedServer> = self.db.create("servers").content(new_server).await?;
-
-            count += 1;
-        }
+        let count = servers.len();
+        
+        // Convert all servers to our model
+        let new_servers: Vec<NewCachedServer> = servers.into_iter().map(|s| s.into()).collect();
+        
+        // Delete all existing servers and insert new ones in a single transaction
+        self.db
+            .query("DELETE FROM servers")
+            .await?;
+        
+        // Batch insert using INSERT statement with JSON
+        let servers_json = serde_json::to_string(&new_servers)
+            .map_err(|e| DbError::Query(e.to_string()))?;
+        
+        self.db
+            .query("INSERT INTO servers $servers")
+            .bind(("servers", serde_json::from_str::<serde_json::Value>(&servers_json).unwrap()))
+            .await?;
 
         Ok(count)
     }
 
-    /// Record player count for history tracking
+    /// Record player count for history tracking (batch operation)
     pub async fn record_player_counts(&self, servers: &[GameServer]) -> Result<(), DbError> {
         let now = chrono::Utc::now().to_rfc3339();
 
-        for server in servers {
-            let history = NewServerHistory {
+        // Build all history records
+        let history_records: Vec<NewServerHistory> = servers
+            .iter()
+            .map(|server| NewServerHistory {
                 game_id: server.game_id,
                 player_count: server.players.len(),
                 recorded_at: now.clone(),
-            };
-
-            let _: Option<ServerHistory> = self.db.create("server_history").content(history).await?;
-        }
+            })
+            .collect();
+        
+        // Batch insert using INSERT statement with JSON
+        let history_json = serde_json::to_string(&history_records)
+            .map_err(|e| DbError::Query(e.to_string()))?;
+        
+        self.db
+            .query("INSERT INTO server_history $records")
+            .bind(("records", serde_json::from_str::<serde_json::Value>(&history_json).unwrap()))
+            .await?;
 
         Ok(())
     }

@@ -28,13 +28,12 @@ pub fn app(props: &AppProps) -> Html {
         <div class="min-h-screen flex flex-col">
             <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
                 <div class="max-w-[1400px] mx-auto text-center mb-6">
-                    <h1 class="text-4xl font-bold text-text-bright flex items-center justify-center gap-2">
-                        <a href="/" class="flex items-center" title="Home">
-                            <img src="/static/favicon.svg" alt="Home" class="w-8 h-8 animate-spin-slow hover:animate-spin-fast" />
-                        </a>
-                        {"Factorio Server Browser"}
-                    </h1>
+                    <a href="/" class="inline-block" title="Home">
+                        <img src="https://cdn.factorio.com/assets/img/web/factorio-logo.png" alt="Factorio" class="h-16 mx-auto" />
+                    </a>
+                    <h1 class="text-3xl font-bold text-text-bright mt-2">{"Server Browser"}</h1>
                     <p class="text-text-secondary text-lg mt-2">{"Find and explore public Factorio multiplayer servers"}</p>
+                    <p class="text-text-muted text-sm mt-1">{"Not affiliated with Wube Software"}</p>
                 </div>
                 
                 <div class="flex justify-center gap-8 flex-wrap">

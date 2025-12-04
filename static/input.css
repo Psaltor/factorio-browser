@@ -16,16 +16,16 @@
   --color-border-accent: #666666;
   --color-border-light: #777777;
   
-  /* Cyan accent */
-  --color-accent-primary: #5cb3c1;
-  --color-accent-secondary: #7ec8d3;
-  --color-accent-dark: #4a9aa6;
+  /* Orange accent */
+  --color-accent-primary: #f4a200;
+  --color-accent-secondary: #f1be64;
+  --color-accent-dark: #ffa200;
   --color-accent-glow: rgba(92, 179, 193, 0.2);
   
   /* Green CTA buttons */
-  --color-btn-green: #7fcd33;
-  --color-btn-green-hover: #8fd94a;
-  --color-btn-green-dark: #5ea523;
+  --color-btn-green: #5eb663;
+  --color-btn-green-hover: #34be3c;
+  --color-btn-green-dark: #5eb663;
   
   /* Status colors */
   --color-status-full: #ff4444;

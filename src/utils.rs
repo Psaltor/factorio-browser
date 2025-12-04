@@ -1,5 +1,89 @@
 use yew::prelude::*;
 
+/// List of Factorio rich text tags that render icons/images (which we can't display)
+/// These will be stripped from the text entirely
+const ICON_TAGS: &[&str] = &[
+    "img",
+    "item",
+    "entity", 
+    "technology",
+    "recipe",
+    "item-group",
+    "fluid",
+    "tile",
+    "virtual-signal",
+    "achievement",
+    "gps",
+    "special-item",
+    "armor",
+    "train",
+    "train-stop",
+    "shortcut",
+    "tip",
+    "tooltip",
+    "quality",
+    "space-platform",
+    "planet",
+    "space-location",
+    "space-age"
+];
+
+/// Strip all unsupported Factorio rich text tags (icons, images, etc.)
+/// These tags are self-closing: [item=iron-plate] (no closing tag)
+fn strip_icon_tags(text: &str) -> String {
+    let mut result = text.to_string();
+    
+    for tag in ICON_TAGS {
+        let pattern = format!("[{}=", tag);
+        while let Some(start) = result.find(&pattern) {
+            // Find the closing bracket
+            if let Some(end_offset) = result[start..].find(']') {
+                let end = start + end_offset + 1;
+                result.replace_range(start..end, "");
+            } else {
+                // No closing bracket, stop processing this tag type
+                break;
+            }
+        }
+    }
+    
+    result
+}
+
+/// Tags that have opening and closing pairs: [color=...][/color], [font=...][/font]
+const PAIRED_TAGS: &[&str] = &["color", "font"];
+
+/// Strip ALL Factorio rich text tags and return plain text
+/// Use this for titles, meta tags, or anywhere HTML can't be rendered
+pub fn strip_all_tags(text: &str) -> String {
+    // First strip icon tags
+    let mut result = strip_icon_tags(text);
+    
+    // Then strip paired tags (keep content, remove tags)
+    for tag in PAIRED_TAGS {
+        let open_pattern = format!("[{}=", tag);
+        let close_pattern = format!("[/{}]", tag);
+        
+        // Remove opening tags: [color=...] or [font=...]
+        while let Some(start) = result.find(&open_pattern) {
+            if let Some(end_offset) = result[start..].find(']') {
+                let end = start + end_offset + 1;
+                result.replace_range(start..end, "");
+            } else {
+                break;
+            }
+        }
+        
+        // Remove closing tags: [/color] or [/font]
+        while let Some(start) = result.find(&close_pattern) {
+            result.replace_range(start..start + close_pattern.len(), "");
+        }
+    }
+    
+    // Clean up any extra whitespace
+    result.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 /// Convert plain text to Html, preserving newlines as <br> tags
 fn text_with_newlines(text: &str) -> Html {
     let parts: Vec<Html> = text
@@ -37,9 +121,13 @@ fn find_next_tag(text: &str) -> Option<(usize, &str)> {
 
 /// Parse Factorio rich text tags: [color=...][/color] and [font=...][/font]
 /// Also converts newlines to <br> tags
+/// Strips unsupported icon tags like [item=...], [entity=...], etc.
 pub fn parse_rich_text(text: &str) -> Html {
+    // First, strip all icon tags that we can't render
+    let cleaned = strip_icon_tags(text);
+    
     let mut result: Vec<Html> = Vec::new();
-    let mut remaining = text;
+    let mut remaining = cleaned.as_str();
 
     while !remaining.is_empty() {
         if let Some((start, tag_type)) = find_next_tag(remaining) {
