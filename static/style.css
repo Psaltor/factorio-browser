@@ -98,9 +98,19 @@ body {
     gap: var(--space-sm);
 }
 
+.home-link {
+    display: flex;
+    align-items: center;
+}
+
 .title-icon {
-    font-size: 2rem;
-    animation: spin 10s linear infinite;
+    width: 2rem;
+    height: 2rem;
+    animation: spin 8s linear infinite;
+}
+
+.title-icon:hover {
+    animation-duration: 1s;
 }
 
 @keyframes spin {

@@ -29,7 +29,9 @@ pub fn app(props: &AppProps) -> Html {
             <header class="app-header">
                 <div class="header-content">
                     <h1 class="app-title">
-                        <span class="title-icon">{"⚙️"}</span>
+                        <a href="/" class="home-link" title="Home">
+                            <img src="/static/favicon.svg" alt="Home" class="title-icon spinning" />
+                        </a>
                         {"Factorio Server Browser"}
                     </h1>
                     <p class="app-subtitle">{"Find and explore public Factorio multiplayer servers"}</p>
