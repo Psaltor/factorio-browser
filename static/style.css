@@ -160,6 +160,7 @@ body {
 .filters {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-end;
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
     padding: var(--space-lg);
@@ -206,6 +207,10 @@ body {
 }
 
 .filter-group.checkbox-group {
+    justify-content: flex-end;
+}
+
+.filter-group:has(.filter-button) {
     justify-content: flex-end;
 }
 
