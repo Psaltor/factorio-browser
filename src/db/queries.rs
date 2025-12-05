@@ -115,24 +115,38 @@ impl DbClient {
     }
 
     /// Cache a list of servers from the API (batch operation)
+    /// Uses a transaction to ensure atomicity - either all servers are updated or none are
     pub async fn cache_servers(&self, servers: Vec<GameServer>) -> Result<usize, DbError> {
         let start = std::time::Instant::now();
         let count = servers.len();
         
-        // Delete all existing servers first
-        self.db.query("DELETE FROM servers").await?;
-        
         // Use native insert_many for better performance
         let new_servers: Vec<NewCachedServer> = servers.into_iter().map(|s| s.into()).collect();
+        
+        // Begin transaction for atomic delete + insert
+        self.db.query("BEGIN TRANSACTION").await?;
+        
+        // Delete all existing servers
+        if let Err(e) = self.db.query("DELETE FROM servers").await {
+            self.db.query("CANCEL TRANSACTION").await.ok();
+            return Err(e.into());
+        }
         
         // Insert in batches for better performance
         const BATCH_SIZE: usize = 500;
         for chunk in new_servers.chunks(BATCH_SIZE) {
-            let _: Vec<CachedServer> = self.db
-                .insert("servers")
+            if let Err(e) = self.db
+                .insert::<Vec<CachedServer>>("servers")
                 .content(chunk.to_vec())
-                .await?;
+                .await
+            {
+                self.db.query("CANCEL TRANSACTION").await.ok();
+                return Err(e.into());
+            }
         }
+        
+        // Commit transaction
+        self.db.query("COMMIT TRANSACTION").await?;
 
         let elapsed = start.elapsed();
         if elapsed.as_millis() > 500 {
