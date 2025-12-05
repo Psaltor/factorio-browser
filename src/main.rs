@@ -6,8 +6,9 @@ use factory_tracker::db::queries::DbClient;
 use factory_tracker::db::models::CachedServer;
 use factory_tracker::utils::strip_all_tags;
 use rocket::form::FromForm;
-use rocket::fs::FileServer;
+use rocket::fs::{relative, NamedFile};
 use rocket::response::content::RawHtml;
+use std::path::{Path, PathBuf};
 use rocket::{get, routes, State};
 use std::sync::Arc;
 use std::time::Duration;
@@ -161,6 +162,13 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
     }
 }
 
+/// Serve static files from the static directory
+#[get("/static/<file..>")]
+async fn static_files(file: PathBuf) -> Option<NamedFile> {
+    let path = Path::new(relative!("static")).join(file);
+    NamedFile::open(path).await.ok()
+}
+
 /// Sanitize error messages to remove sensitive information like URLs with credentials
 fn sanitize_error(error: &str) -> String {
     // Remove URLs that might contain credentials
@@ -282,9 +290,8 @@ async fn main(#[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore)
     let rocket = rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
-        .mount("/", routes![index, server_details_page, health])
-        .mount("/", routes![get_servers, get_server, get_server_history])
-        .mount("/static", FileServer::from("static"));
+        .mount("/", routes![index, server_details_page, health, static_files])
+        .mount("/", routes![get_servers, get_server, get_server_history]);
 
     Ok(rocket.into())
 }
