@@ -90,6 +90,7 @@ impl DbClient {
                 DEFINE FIELD IF NOT EXISTS game_version ON servers TYPE string;
                 DEFINE FIELD IF NOT EXISTS build_version ON servers TYPE int;
                 DEFINE FIELD IF NOT EXISTS host_address ON servers TYPE option<string>;
+                DEFINE FIELD IF NOT EXISTS headless_server ON servers TYPE bool;
                 DEFINE FIELD IF NOT EXISTS cached_at ON servers TYPE string;
                 DEFINE INDEX IF NOT EXISTS game_id_idx ON servers FIELDS game_id UNIQUE;
                 "#,

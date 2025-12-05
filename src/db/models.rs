@@ -24,6 +24,8 @@ pub struct CachedServer {
     pub build_version: u32,
     #[serde(default)]
     pub host_address: Option<String>,
+    #[serde(default)]
+    pub headless_server: bool,
     pub cached_at: String,
 }
 
@@ -53,6 +55,7 @@ pub struct NewCachedServer {
     pub game_version: String,
     pub build_version: u32,
     pub host_address: Option<String>,
+    pub headless_server: bool,
     pub cached_at: String,
 }
 
@@ -80,6 +83,7 @@ impl From<crate::api::factorio::GameServer> for NewCachedServer {
             game_version: server.application_version.game_version,
             build_version: server.application_version.build_version,
             host_address: server.host_address,
+            headless_server: server.headless_server,
             cached_at: chrono::Utc::now().to_rfc3339(),
         }
     }

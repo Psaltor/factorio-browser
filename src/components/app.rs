@@ -18,6 +18,8 @@ pub struct AppProps {
     #[prop_or_default]
     pub no_password: bool,
     #[prop_or_default]
+    pub is_dedicated: bool,
+    #[prop_or_default]
     pub tags: String, // Comma-separated list of selected tags
 }
 
@@ -63,6 +65,7 @@ pub fn app(props: &AppProps) -> Html {
                     current_version={props.version.clone()}
                     has_players={props.has_players}
                     no_password={props.no_password}
+                    is_dedicated={props.is_dedicated}
                     selected_tags={props.tags.clone()}
                 />
             </main>

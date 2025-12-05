@@ -21,6 +21,8 @@ pub struct ServerListProps {
     #[prop_or_default]
     pub no_password: bool,
     #[prop_or_default]
+    pub is_dedicated: bool,
+    #[prop_or_default]
     pub selected_tags: String, // Comma-separated list of selected tags
 }
 
@@ -119,6 +121,11 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 return false;
             }
 
+            // Dedicated server filter
+            if props.is_dedicated && !s.headless_server {
+                return false;
+            }
+
             // Tag filter (OR logic - server must have at least one selected tag)
             if !selected_tags.is_empty() {
                 if !selected_tags.iter().any(|t| s.tags.contains(t)) {
@@ -137,6 +144,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 current_version={props.current_version.clone()}
                 has_players={props.has_players}
                 no_password={props.no_password}
+                is_dedicated={props.is_dedicated}
                 versions={versions}
                 latest_version={latest_version}
                 available_tags={available_tags}

@@ -7,6 +7,7 @@ pub struct FilterState {
     pub version: String,
     pub has_players: bool,
     pub no_password: bool,
+    pub is_dedicated: bool,
     pub tags: Vec<String>,
 }
 
@@ -20,6 +21,8 @@ pub struct FiltersProps {
     pub has_players: bool,
     #[prop_or_default]
     pub no_password: bool,
+    #[prop_or_default]
+    pub is_dedicated: bool,
     #[prop_or_default]
     pub versions: Vec<String>,
     #[prop_or_default]
@@ -45,6 +48,9 @@ fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: 
     }
     if props.no_password {
         params.push("no_password=true".to_string());
+    }
+    if props.is_dedicated {
+        params.push("is_dedicated=true".to_string());
     }
     
     // Handle tags
@@ -97,6 +103,9 @@ pub fn filters(props: &FiltersProps) -> Html {
         }
         if props.no_password {
             params.push("no_password=true".to_string());
+        }
+        if props.is_dedicated {
+            params.push("is_dedicated=true".to_string());
         }
         if !props.selected_tags.is_empty() {
             params.push(format!("tags={}", urlencoding::encode(&props.selected_tags.join(","))));
@@ -181,6 +190,19 @@ pub fn filters(props: &FiltersProps) -> Html {
                             class="accent-accent-primary w-4 h-4"
                         />
                         <span class="text-sm text-text-primary">{"No Password"}</span>
+                    </label>
+                </div>
+                
+                <div class="flex flex-col gap-1 justify-end">
+                    <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
+                        <input 
+                            type="checkbox" 
+                            name="is_dedicated"
+                            value="true"
+                            checked={props.is_dedicated}
+                            class="accent-accent-primary w-4 h-4"
+                        />
+                        <span class="text-sm text-text-primary">{"Dedicated"}</span>
                     </label>
                 </div>
                 
