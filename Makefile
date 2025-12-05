@@ -17,6 +17,9 @@ build: css
 dev: css
 	shuttle run
 
+# Cargo watch
+watch:
+	cargo watch -x "shuttle run"
 # Clean
 clean:
 	cargo clean
