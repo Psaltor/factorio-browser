@@ -105,6 +105,7 @@ impl DbClient {
                 DEFINE FIELD IF NOT EXISTS player_count ON server_history TYPE int;
                 DEFINE FIELD IF NOT EXISTS recorded_at ON server_history TYPE string;
                 DEFINE INDEX IF NOT EXISTS history_game_idx ON server_history FIELDS game_id;
+                DEFINE INDEX IF NOT EXISTS history_time_idx ON server_history FIELDS recorded_at;
                 "#,
             )
             .await?;
@@ -114,35 +115,41 @@ impl DbClient {
 
     /// Cache a list of servers from the API (batch operation)
     pub async fn cache_servers(&self, servers: Vec<GameServer>) -> Result<usize, DbError> {
+        let start = std::time::Instant::now();
         let count = servers.len();
         
-        // Convert all servers to our model
+        // Delete all existing servers first
+        self.db.query("DELETE FROM servers").await?;
+        
+        // Use native insert_many for better performance
         let new_servers: Vec<NewCachedServer> = servers.into_iter().map(|s| s.into()).collect();
         
-        // Delete all existing servers and insert new ones in a single transaction
-        self.db
-            .query("DELETE FROM servers")
-            .await?;
-        
-        // Batch insert using INSERT statement with JSON
-        let servers_json = serde_json::to_string(&new_servers)
-            .map_err(|e| DbError::Query(e.to_string()))?;
-        
-        self.db
-            .query("INSERT INTO servers $servers")
-            .bind(("servers", serde_json::from_str::<serde_json::Value>(&servers_json).unwrap()))
-            .await?;
+        // Insert in batches for better performance
+        const BATCH_SIZE: usize = 500;
+        for chunk in new_servers.chunks(BATCH_SIZE) {
+            let _: Vec<CachedServer> = self.db
+                .insert("servers")
+                .content(chunk.to_vec())
+                .await?;
+        }
+
+        let elapsed = start.elapsed();
+        if elapsed.as_millis() > 500 {
+            eprintln!("[DB SLOW] cache_servers took {:?} for {} servers", elapsed, count);
+        }
 
         Ok(count)
     }
 
     /// Record player count for history tracking (batch operation)
     pub async fn record_player_counts(&self, servers: &[GameServer]) -> Result<(), DbError> {
+        let start = std::time::Instant::now();
         let now = chrono::Utc::now().to_rfc3339();
 
-        // Build all history records
+        // Only record history for servers with players (significant data reduction)
         let history_records: Vec<NewServerHistory> = servers
             .iter()
+            .filter(|server| !server.players.is_empty())
             .map(|server| NewServerHistory {
                 game_id: server.game_id,
                 player_count: server.players.len(),
@@ -150,14 +157,22 @@ impl DbClient {
             })
             .collect();
         
-        // Batch insert using INSERT statement with JSON
-        let history_json = serde_json::to_string(&history_records)
-            .map_err(|e| DbError::Query(e.to_string()))?;
+        if history_records.is_empty() {
+            return Ok(());
+        }
         
-        self.db
-            .query("INSERT INTO server_history $records")
-            .bind(("records", serde_json::from_str::<serde_json::Value>(&history_json).unwrap()))
+        let record_count = history_records.len();
+        
+        // Use native insert for better performance
+        let _: Vec<ServerHistory> = self.db
+            .insert("server_history")
+            .content(history_records)
             .await?;
+
+        let elapsed = start.elapsed();
+        if elapsed.as_millis() > 500 {
+            eprintln!("[DB SLOW] record_player_counts took {:?} for {} records", elapsed, record_count);
+        }
 
         Ok(())
     }
