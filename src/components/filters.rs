@@ -120,7 +120,7 @@ pub fn filters(props: &FiltersProps) -> Html {
                             type="text" 
                             id="search"
                             name="search"
-                            placeholder="Search server titles, descriptions, or tags..."
+                            placeholder="Search titles, descriptions, or tags..."
                             value={props.current_search.clone()}
                             class="w-full py-2 px-4 pr-9 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary"
                         />
