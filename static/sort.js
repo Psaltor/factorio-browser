@@ -1,3 +1,46 @@
+// Handle view transitions on back/forward navigation
+(function() {
+    // Skip if view transitions are not supported
+    if (!('ViewTransition' in window)) return;
+    
+    // Listen for pagereveal to handle back/forward navigation
+    window.addEventListener('pagereveal', (event) => {
+        // If there's no view transition, nothing to do
+        if (!event.viewTransition) return;
+        
+        // Check if this is a back/forward navigation (traverse)
+        const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+        const isTraversal = navigationType === 'back_forward';
+        
+        // Also check using Navigation API if available
+        const navEntry = window.navigation?.currentEntry;
+        const isBackNavigation = navEntry && window.navigation?.transition?.navigationType === 'traverse';
+        
+        if (isTraversal || isBackNavigation) {
+            // Add a class to indicate back navigation for CSS styling
+            document.documentElement.classList.add('back-navigation');
+            
+            // Remove the class after the transition completes
+            event.viewTransition.finished.then(() => {
+                document.documentElement.classList.remove('back-navigation');
+            }).catch(() => {
+                document.documentElement.classList.remove('back-navigation');
+            });
+        }
+    });
+    
+    // Ensure video continues playing after BFCache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            // Page was restored from BFCache
+            const video = document.querySelector('.video-background');
+            if (video && video.paused) {
+                video.play().catch(() => {});
+            }
+        }
+    });
+})();
+
 // Tag filtering toggle function
 function toggleTag(tag) {
     const input = document.getElementById('tags-input');

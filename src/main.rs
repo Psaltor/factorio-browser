@@ -41,12 +41,6 @@ struct IndexFilters {
 fn html_shell_with_video(title: &str, content: String, with_video: bool) -> String {
     let video_url = "https://lambs.cafe/wp-content/uploads/2025/12/space-age.mp4";
     
-    let video_preload = if with_video {
-        format!(r#"<link rel="preload" href="{}" as="video" type="video/mp4">"#, video_url)
-    } else {
-        String::new()
-    };
-    
     let video_element = if with_video {
         format!(r#"<video class="video-background" autoplay muted loop playsinline preload="auto">
         <source src="{}" type="video/mp4">
@@ -66,7 +60,6 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     <meta name="view-transition" content="same-origin">
     <title>{title}</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    {video_preload}
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +73,6 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
 </html>"#,
         title = title,
         body_class = body_class,
-        video_preload = video_preload,
         video = video_element,
         content = content
     )

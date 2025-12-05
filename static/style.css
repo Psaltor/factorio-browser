@@ -757,6 +757,11 @@
     -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
     backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
   }
+  .transition {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
   .transition-all {
     transition-property: all;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
@@ -872,6 +877,9 @@
 ::view-transition-new(root) {
   animation: 150ms ease-in 100ms both vt-fade-in;
 }
+::view-transition-group(root).back-navigation {
+  animation-direction: reverse;
+}
 @keyframes vt-fade-out {
   to {
     opacity: 0;
@@ -925,6 +933,20 @@
   ::view-transition-old(video-bg), ::view-transition-new(video-bg) {
     animation: none;
     mix-blend-mode: normal;
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  ::view-transition-image-pair(video-bg) {
+    isolation: auto;
+  }
+  ::view-transition-old(video-bg) {
+    z-index: -1;
+  }
+  ::view-transition-new(video-bg) {
+    z-index: -1;
   }
   .history-bar {
     flex: 1;

@@ -74,6 +74,11 @@
   animation: 150ms ease-in 100ms both vt-fade-in;
 }
 
+/* Back navigation uses reversed timing for a more natural feel */
+::view-transition-group(root).back-navigation {
+  animation-direction: reverse;
+}
+
 @keyframes vt-fade-out {
   to { opacity: 0; }
 }
@@ -131,11 +136,30 @@
     }
   }
 
-  /* Keep video static during view transitions */
+  /* Keep video static during view transitions - both old and new snapshots */
   ::view-transition-old(video-bg),
   ::view-transition-new(video-bg) {
     animation: none;
     mix-blend-mode: normal;
+    /* Ensure the video snapshot stays in the same position */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Prevent video from being part of the root transition */
+  ::view-transition-image-pair(video-bg) {
+    isolation: auto;
+  }
+  
+  /* Ensure only one video is visible during transition to prevent flicker */
+  ::view-transition-old(video-bg) {
+    z-index: -1;
+  }
+  ::view-transition-new(video-bg) {
+    z-index: -1;
   }
 
   /* History chart bars */
