@@ -108,8 +108,11 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
 async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
     use factory_tracker::components::server_details::ModEntry;
     
-    // Get cached server data
-    let server = state.db.get_server(game_id).await.ok().flatten();
+    // Get server from in-memory cache (avoids race condition during DB refresh)
+    let server = state.cached_servers.read().await
+        .iter()
+        .find(|s| s.game_id == game_id)
+        .cloned();
     
     // Fetch fresh details from API for players and mods
     let (players, mods) = match state.factorio_client.get_game_details(game_id).await {
