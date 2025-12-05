@@ -7,7 +7,10 @@ use factory_tracker::db::models::CachedServer;
 use factory_tracker::utils::strip_all_tags;
 use rocket::form::FromForm;
 use rocket::fs::{relative, NamedFile};
+use rocket::http::Header;
 use rocket::response::content::RawHtml;
+use rocket::response::{Responder, Response};
+use rocket::Request;
 use std::path::{Path, PathBuf};
 use rocket::{get, routes, State};
 use std::sync::Arc;
@@ -162,11 +165,23 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
     }
 }
 
-/// Serve static files from the static directory
+/// Wrapper for NamedFile that adds caching headers
+pub struct CachedFile(NamedFile);
+
+impl<'r> Responder<'r, 'static> for CachedFile {
+    fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
+        Response::build_from(self.0.respond_to(req)?)
+            // Cache for 1 day, revalidate with server
+            .header(Header::new("Cache-Control", "public, max-age=86400, must-revalidate"))
+            .ok()
+    }
+}
+
+/// Serve static files from the static directory with caching headers
 #[get("/static/<file..>")]
-async fn static_files(file: PathBuf) -> Option<NamedFile> {
+async fn static_files(file: PathBuf) -> Option<CachedFile> {
     let path = Path::new(relative!("static")).join(file);
-    NamedFile::open(path).await.ok()
+    NamedFile::open(path).await.ok().map(CachedFile)
 }
 
 /// Sanitize error messages to remove sensitive information like URLs with credentials
