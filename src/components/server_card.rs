@@ -46,7 +46,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
             // Card view
             <a href={details_url.clone()} class="server-card block no-underline text-inherit bg-bg-card border border-border-subtle rounded-md p-6 cursor-pointer transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
                 <div class="flex items-start justify-between gap-2 mb-4">
-                    <h3 class="text-lg font-normal leading-tight break-words">{parse_rich_text(&server.name)}</h3>
+                    <h3 class="text-lg font-normal leading-tight break-words break-all">{parse_rich_text(&server.name)}</h3>
                     {if server.has_password {
                         html! { <span class="flex-shrink-0 text-base" title="Password Protected">{"🔒"}</span> }
                     } else {
