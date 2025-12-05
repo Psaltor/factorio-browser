@@ -110,7 +110,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
             // List row view
             <a href={details_url} class="server-row hidden items-center gap-4 py-2 px-4 bg-bg-card border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
                 <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-medium">
-                    {&server.name}
+                    {parse_rich_text(&server.name)}
                     {if server.has_password {
                         html! { <span class="ml-1 text-[0.85em]">{"🔒"}</span> }
                     } else {
