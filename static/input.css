@@ -60,33 +60,6 @@
   }
 }
 
-/* Enable cross-document view transitions for smoother navigation */
-@view-transition {
-  navigation: auto;
-}
-
-/* Fast, simple page transition - just fade the content */
-::view-transition-old(root) {
-  animation: 150ms ease-out both vt-fade-out;
-}
-
-::view-transition-new(root) {
-  animation: 150ms ease-in 100ms both vt-fade-in;
-}
-
-/* Back navigation uses reversed timing for a more natural feel */
-::view-transition-group(root).back-navigation {
-  animation-direction: reverse;
-}
-
-@keyframes vt-fade-out {
-  to { opacity: 0; }
-}
-
-@keyframes vt-fade-in {
-  from { opacity: 0; }
-}
-
 /* Base styles */
 @layer base {
   * {
@@ -116,17 +89,14 @@
     height: 100%;
     object-fit: cover;
     z-index: -1;
-    opacity: 0.3;
-    view-transition-name: video-bg;
+    opacity: 0;
+    animation: videoFadeIn 0.8s ease-out 0.1s forwards;
   }
 
-  /* Only animate video on first load, not during view transitions */
-  @media not (prefers-reduced-motion: reduce) {
-    @supports not (view-transition-name: none) {
-      .video-background {
-        opacity: 0;
-        animation: videoFadeIn 0.8s ease-out 0.1s forwards;
-      }
+  @media (prefers-reduced-motion: reduce) {
+    .video-background {
+      opacity: 0.3;
+      animation: none;
     }
   }
 
@@ -134,32 +104,6 @@
     to {
       opacity: 0.3;
     }
-  }
-
-  /* Keep video static during view transitions - both old and new snapshots */
-  ::view-transition-old(video-bg),
-  ::view-transition-new(video-bg) {
-    animation: none;
-    mix-blend-mode: normal;
-    /* Ensure the video snapshot stays in the same position */
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  /* Prevent video from being part of the root transition */
-  ::view-transition-image-pair(video-bg) {
-    isolation: auto;
-  }
-  
-  /* Ensure only one video is visible during transition to prevent flicker */
-  ::view-transition-old(video-bg) {
-    z-index: -1;
-  }
-  ::view-transition-new(video-bg) {
-    z-index: -1;
   }
 
   /* History chart bars */
