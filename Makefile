@@ -12,10 +12,10 @@ css-prod:
 
 # Rust build
 build: css
-	cargo build --release
+	shuttle build --release
 
 dev: css
-	cargo run
+	shuttle run
 
 # Clean
 clean:
