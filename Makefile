@@ -11,7 +11,7 @@ css-prod:
 	./tailwindcss -i static/input.css -o static/style.css --minify
 
 # Rust build
-build: css
+build: css-prod
 	shuttle build --release
 
 dev: css
