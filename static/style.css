@@ -296,6 +296,9 @@
   .h-4 {
     height: calc(var(--spacing) * 4);
   }
+  .h-5 {
+    height: calc(var(--spacing) * 5);
+  }
   .h-12 {
     height: calc(var(--spacing) * 12);
   }
@@ -316,6 +319,9 @@
   }
   .w-4 {
     width: calc(var(--spacing) * 4);
+  }
+  .w-5 {
+    width: calc(var(--spacing) * 5);
   }
   .w-12 {
     width: calc(var(--spacing) * 12);
@@ -355,6 +361,9 @@
   }
   .flex-shrink-0 {
     flex-shrink: 0;
+  }
+  .transform {
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
   .animate-slide-up {
     animation: var(--animate-slide-up);
@@ -577,6 +586,9 @@
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
   }
+  .pr-9 {
+    padding-right: calc(var(--spacing) * 9);
+  }
   .pr-12 {
     padding-right: calc(var(--spacing) * 12);
   }
@@ -787,6 +799,13 @@
       }
     }
   }
+  .hover\:bg-border-subtle {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-border-subtle);
+      }
+    }
+  }
   .hover\:bg-btn-green-hover {
     &:hover {
       @media (hover: hover) {
@@ -815,6 +834,13 @@
       }
     }
   }
+  .hover\:text-text-primary {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-text-primary);
+      }
+    }
+  }
   .focus\:border-accent-primary {
     &:focus {
       border-color: var(--color-accent-primary);
@@ -835,6 +861,25 @@
     @media (width < 48rem) {
       grid-template-columns: repeat(1, minmax(0, 1fr));
     }
+  }
+}
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root) {
+  animation: 150ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 150ms ease-in 100ms both vt-fade-in;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
   }
 }
 @layer base {
@@ -862,6 +907,24 @@
     object-fit: cover;
     z-index: -1;
     opacity: 0.3;
+    view-transition-name: video-bg;
+  }
+  @media not (prefers-reduced-motion: reduce) {
+    @supports not (view-transition-name: none) {
+      .video-background {
+        opacity: 0;
+        animation: videoFadeIn 0.8s ease-out 0.1s forwards;
+      }
+    }
+  }
+  @keyframes videoFadeIn {
+    to {
+      opacity: 0.3;
+    }
+  }
+  ::view-transition-old(video-bg), ::view-transition-new(video-bg) {
+    animation: none;
+    mix-blend-mode: normal;
   }
   .history-bar {
     flex: 1;
@@ -912,6 +975,26 @@
   .mods-list::-webkit-scrollbar-thumb:hover {
     background: #666666;
   }
+}
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false;
 }
 @property --tw-border-style {
   syntax: "*";
@@ -1041,6 +1124,11 @@
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
       --tw-border-style: solid;
       --tw-leading: initial;
       --tw-font-weight: initial;
