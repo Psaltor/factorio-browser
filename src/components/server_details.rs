@@ -75,7 +75,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
             
             <div class="bg-bg-card border border-border-subtle rounded-lg max-w-[700px] w-full max-h-[90vh] overflow-y-auto relative animate-slide-up">
                 <header class="p-8 pb-6 border-b border-border-subtle">
-                    <h2 class="text-2xl mb-2 pr-12">{parse_rich_text(&server.name)}</h2>
+                    <h2 class="text-2xl mb-2 pr-12 break-words break-all">{parse_rich_text(&server.name)}</h2>
                     {if server.has_password {
                         html! { <span class="inline-block py-1 px-2 rounded-sm text-[0.85rem] bg-status-full/15 text-status-full">{"🔒 Password Protected"}</span> }
                     } else {
