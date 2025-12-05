@@ -106,7 +106,7 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
 /// Server details page
 #[get("/server/<game_id>")]
 async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
-    use factory_tracker::components::server_details::{HistoryEntry, ModEntry};
+    use factory_tracker::components::server_details::ModEntry;
     
     // Get cached server data
     let server = state.db.get_server(game_id).await.ok().flatten();
@@ -123,17 +123,15 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
         Err(_) => (Vec::new(), Vec::new()),
     };
     
-    let history = state
+    // Fetch raw history and fill gaps with 0-player entries
+    // Since we only record when players > 0, we need to fill in the timeline
+    let raw_history = state
         .db
         .get_server_history(game_id, 24)
         .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|h| HistoryEntry {
-            player_count: h.player_count,
-            recorded_at: h.recorded_at,
-        })
-        .collect();
+        .unwrap_or_default();
+    
+    let history = fill_history_gaps(raw_history);
 
     match server {
         Some(server) => {
@@ -187,6 +185,49 @@ impl<'r> Responder<'r, 'static> for CachedFile {
 async fn static_files(file: PathBuf) -> Option<CachedFile> {
     let path = Path::new(relative!("static")).join(file);
     NamedFile::open(path).await.ok().map(CachedFile)
+}
+
+/// Fill gaps in history data with 0-player entries
+/// Since we only record when players > 0, we need to fill in periods of inactivity
+fn fill_history_gaps(raw_history: Vec<factory_tracker::db::models::ServerHistory>) -> Vec<factory_tracker::components::server_details::HistoryEntry> {
+    use chrono::{DateTime, Duration, Utc};
+    use factory_tracker::components::server_details::HistoryEntry;
+    use std::collections::HashMap;
+    
+    let now = Utc::now();
+    
+    // Create a map of hour -> player counts for that hour
+    let mut hourly_counts: HashMap<i64, Vec<usize>> = HashMap::new();
+    
+    for record in &raw_history {
+        if let Ok(recorded_at) = DateTime::parse_from_rfc3339(&record.recorded_at) {
+            // Calculate hours ago (0 = current hour, 23 = 23 hours ago)
+            let hours_ago = (now - recorded_at.with_timezone(&Utc)).num_hours();
+            if hours_ago >= 0 && hours_ago < 24 {
+                hourly_counts
+                    .entry(hours_ago)
+                    .or_default()
+                    .push(record.player_count);
+            }
+        }
+    }
+    
+    // Generate 24 hourly entries (newest first to match expected order)
+    // Each entry represents the average player count for that hour, or 0 if no data
+    (0..24)
+        .map(|hours_ago| {
+            let avg_count = hourly_counts
+                .get(&hours_ago)
+                .map(|counts| counts.iter().sum::<usize>() / counts.len().max(1))
+                .unwrap_or(0);
+            
+            let timestamp = now - Duration::hours(hours_ago);
+            HistoryEntry {
+                player_count: avg_count,
+                recorded_at: timestamp.to_rfc3339(),
+            }
+        })
+        .collect()
 }
 
 /// Sanitize error messages to remove sensitive information like URLs with credentials
