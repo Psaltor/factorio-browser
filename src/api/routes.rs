@@ -65,9 +65,10 @@ pub async fn get_servers(
             // Search filter
             if let Some(ref search) = filters.search {
                 let search_lower = search.to_lowercase();
-                if !s.name.to_lowercase().contains(&search_lower)
-                    && !s.description.to_lowercase().contains(&search_lower)
-                {
+                let name_matches = s.name.to_lowercase().contains(&search_lower);
+                let desc_matches = s.description.to_lowercase().contains(&search_lower);
+                let tags_match = s.tags.iter().any(|t| t.to_lowercase().contains(&search_lower));
+                if !name_matches && !desc_matches && !tags_match {
                     return false;
                 }
             }

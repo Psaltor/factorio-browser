@@ -84,6 +84,30 @@ pub fn filters(props: &FiltersProps) -> Html {
     
     // Build URL for clearing all tags
     let clear_tags_url = build_filter_url(props, None, true);
+    
+    // Build URL for clearing search (preserves other filters)
+    let clear_search_url = {
+        let mut params = Vec::new();
+        // Don't include search - we're clearing it
+        if !props.current_version.is_empty() {
+            params.push(format!("version={}", urlencoding::encode(&props.current_version)));
+        }
+        if props.has_players {
+            params.push("has_players=true".to_string());
+        }
+        if props.no_password {
+            params.push("no_password=true".to_string());
+        }
+        if !props.selected_tags.is_empty() {
+            params.push(format!("tags={}", urlencoding::encode(&props.selected_tags.join(","))));
+        }
+        if params.is_empty() {
+            "/".to_string()
+        } else {
+            format!("/?{}", params.join("&"))
+        }
+    };
+    let has_search = !props.current_search.is_empty();
 
     html! {
         <form id="filter-form" class="flex flex-col gap-4 mb-8 p-6 bg-bg-card/85 backdrop-blur-[10px] border border-border-subtle rounded-md" method="get" action="/">
@@ -91,14 +115,30 @@ pub fn filters(props: &FiltersProps) -> Html {
             <div class="flex flex-wrap items-end gap-4">
                 <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
                     <label for="search" class="text-xs text-text-secondary uppercase tracking-wider">{"Search"}</label>
-                    <input 
-                        type="text" 
-                        id="search"
-                        name="search"
-                        placeholder="Search servers..."
-                        value={props.current_search.clone()}
-                        class="py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary"
-                    />
+                    <div style="position: relative;">
+                        <input 
+                            type="text" 
+                            id="search"
+                            name="search"
+                            placeholder="Search server titles, descriptions, or tags..."
+                            value={props.current_search.clone()}
+                            class="w-full py-2 px-4 pr-9 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary"
+                        />
+                        {if has_search {
+                            html! {
+                                <a 
+                                    href={clear_search_url}
+                                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);"
+                                    class="flex items-center justify-center w-5 h-5 text-text-secondary hover:text-text-primary transition-colors rounded-full hover:bg-border-subtle"
+                                    title="Clear search"
+                                >
+                                    {"×"}
+                                </a>
+                            }
+                        } else {
+                            html! {}
+                        }}
+                    </div>
                 </div>
                 
                 <div class="flex flex-col gap-1">
