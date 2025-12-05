@@ -108,8 +108,8 @@ pub fn server_card(props: &ServerCardProps) -> Html {
             </a>
             
             // List row view
-            <a href={details_url} class="server-row hidden items-center gap-4 py-2 px-4 bg-bg-card border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
-                <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-medium">
+            <a href={details_url} class="server-row hidden flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-2 px-4 bg-bg-card border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
+                <span class="flex-1 min-w-0 text-center sm:text-left overflow-hidden text-ellipsis whitespace-nowrap font-medium">
                     {parse_rich_text(&server.name)}
                     {if server.has_password {
                         html! { <span class="ml-1 text-[0.85em]">{"🔒"}</span> }
@@ -117,10 +117,12 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                         html! {}
                     }}
                 </span>
-                <span class="w-[60px] text-center text-accent-secondary font-medium">{format!("{}/{}", server.player_count, server.max_players)}</span>
-                <span class="w-[70px] text-center text-text-secondary text-sm">{&server.game_version}</span>
-                <span class="w-[80px] text-center text-text-muted text-sm">{&game_time}</span>
-                <span class="w-[80px] text-right text-text-muted text-[0.85rem]">{&mods_display}</span>
+                <div class="flex sm:contents gap-4">
+                    <span class="w-[60px] text-center text-accent-secondary font-medium">{format!("{}/{}", server.player_count, server.max_players)}</span>
+                    <span class="w-[70px] text-center text-text-secondary text-sm">{&server.game_version}</span>
+                    <span class="w-[80px] text-center text-text-muted text-sm">{&game_time}</span>
+                    <span class="w-[80px] text-right text-text-muted text-[0.85rem]">{&mods_display}</span>
+                </div>
             </a>
         </div>
     }

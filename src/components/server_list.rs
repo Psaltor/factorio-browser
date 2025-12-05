@@ -180,7 +180,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                         
                         <div class="server-grid grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
                             <div class="list-header hidden items-center gap-4 py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm sticky top-0 z-10 text-xs font-semibold uppercase tracking-widest text-text-secondary">
-                                <span class="flex-1 min-w-0">{"Name"}</span>
+                                <span class="hidden sm:flex sm:flex-1 min-w-0">{"Name"}</span>
                                 <span class="w-[60px] text-center">{"Players"}</span>
                                 <span class="w-[70px] text-center">{"Version"}</span>
                                 <span class="w-[80px] text-center">{"Time"}</span>
