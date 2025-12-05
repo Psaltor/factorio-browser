@@ -186,6 +186,9 @@ pub fn server_list(props: &ServerListProps) -> Html {
                             
                             <div class="flex items-center gap-2">
                                 <span class="text-text-muted text-[0.85rem]">{"Sort by:"}</span>
+                                <button type="button" class="sort-button py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="name">
+                                    {"Name "}<span class="sort-arrow text-xs ml-0.5">{""}</span>
+                                </button>
                                 <button type="button" class="sort-button active py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="players" data-dir="desc">
                                     {"Players "}<span class="sort-arrow text-xs ml-0.5">{"▼"}</span>
                                 </button>

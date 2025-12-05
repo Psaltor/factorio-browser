@@ -168,9 +168,19 @@ function toggleTag(tag) {
         const items = Array.from(grid.querySelectorAll('.server-item'));
         
         items.sort((a, b) => {
-            const aVal = parseInt(a.dataset[sortBy]) || 0;
-            const bVal = parseInt(b.dataset[sortBy]) || 0;
-            return dir === 'desc' ? bVal - aVal : aVal - bVal;
+            if (sortBy === 'name') {
+                // String comparison for name sorting
+                // desc (▼) = A→Z, asc (▲) = Z→A
+                const aVal = a.dataset[sortBy] || '';
+                const bVal = b.dataset[sortBy] || '';
+                const cmp = aVal.localeCompare(bVal);
+                return dir === 'desc' ? cmp : -cmp;
+            } else {
+                // Numeric comparison for players, time, etc.
+                const aVal = parseInt(a.dataset[sortBy]) || 0;
+                const bVal = parseInt(b.dataset[sortBy]) || 0;
+                return dir === 'desc' ? bVal - aVal : aVal - bVal;
+            }
         });
         
         // Re-append in sorted order
