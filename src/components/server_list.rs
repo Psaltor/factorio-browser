@@ -137,6 +137,10 @@ pub fn server_list(props: &ServerListProps) -> Html {
         })
         .collect();
 
+    // Calculate total players in filtered servers
+    let filtered_player_count: usize = filtered_servers.iter().map(|s| s.player_count).sum();
+    let total_player_count: usize = props.servers.iter().map(|s| s.player_count).sum();
+
     html! {
         <div>
             <Filters 
@@ -168,7 +172,17 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 html! {
                     <>
                         <div class="flex justify-between items-center flex-wrap gap-4 mb-4 text-text-secondary text-sm">
-                            <span>{format!("Showing {} of {} servers", filtered_servers.len(), props.servers.len())}</span>
+                            <span>
+                                {format!("{} of {} servers", filtered_servers.len(), props.servers.len())}
+                                <span class="mx-2 text-border-subtle">{" · "}</span>
+                                <span class="text-accent-secondary font-medium">{format!("{}", filtered_player_count)}</span>
+                                {if filtered_player_count != total_player_count {
+                                    html! { <span class="text-text-muted">{format!(" of {}", total_player_count)}</span> }
+                                } else {
+                                    html! {}
+                                }}
+                                {" players online"}
+                            </span>
                             
                             <div class="flex items-center gap-2">
                                 <span class="text-text-muted text-[0.85rem]">{"Sort by:"}</span>
