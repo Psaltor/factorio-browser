@@ -75,7 +75,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
     let available_tags: Vec<String> = available_tags
         .into_iter()
         .filter(|(tag, _)| !EXCLUDED_TAGS.contains(&tag.as_str()))
-        .take(15)
+        .take(20)
         .map(|(tag, _)| tag)
         .collect();
 
