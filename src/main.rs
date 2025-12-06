@@ -53,7 +53,7 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     let body_class = if with_video { " class=\"has-video\"" } else { "" };
     
     format!(
-        r#"<!DOCTYPE html>
+        r##"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -88,7 +88,7 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     {content}
     <script src="/static/sort.js" defer></script>
 </body>
-</html>"#,
+</html>"##,
         title = title,
         body_class = body_class,
         video = video_element,
