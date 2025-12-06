@@ -155,17 +155,22 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 selected_tags={selected_tags}
             />
             
+            // Show error banner if there's an error (but still show cached servers below)
+            {if let Some(ref error) = props.error {
+                html! {
+                    <div class="text-center py-4 px-4 mb-4 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
+                        <p>{"⚠ "}{error}{" — showing cached data"}</p>
+                    </div>
+                }
+            } else {
+                html! {}
+            }}
+            
             {if props.loading {
                 html! {
                     <div class="text-center py-12">
                         <div class="w-12 h-12 border-[3px] border-border-accent border-t-accent-primary rounded-full animate-spin mx-auto mb-4"></div>
                         <p>{"Loading servers..."}</p>
-                    </div>
-                }
-            } else if let Some(ref error) = props.error {
-                html! {
-                    <div class="text-center py-8 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
-                        <p>{"Error loading servers: "}{error}</p>
                     </div>
                 }
             } else {
