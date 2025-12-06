@@ -44,7 +44,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
     html! {
         <div class="server-item contents" data-players={server.player_count.to_string()} data-time={server.game_time_elapsed.to_string()} data-name={server.name.to_lowercase()}>
             // Card view
-            <a href={details_url.clone()} class="server-card block no-underline text-inherit bg-bg-card border border-border-subtle rounded-md p-6 cursor-pointer transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
+            <a href={details_url.clone()} class="server-card block no-underline text-inherit bg-bg-card/65 backdrop-blur-[10px] border border-border-subtle rounded-md p-6 cursor-pointer transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
                 <div class="flex items-start justify-between gap-2 mb-4">
                     <h3 class="text-lg font-normal leading-tight break-words break-all">{parse_rich_text(&server.name)}</h3>
                     {if server.has_password {

@@ -119,7 +119,7 @@ pub fn filters(props: &FiltersProps) -> Html {
     let has_search = !props.current_search.is_empty();
 
     html! {
-        <form id="filter-form" class="flex flex-col gap-4 mb-8 p-6 bg-bg-card/85 backdrop-blur-[10px] border border-border-subtle rounded-md" method="get" action="/">
+        <form id="filter-form" class="flex flex-col gap-4 mb-8 p-6 bg-bg-card/65 backdrop-blur-[10px] border border-border-subtle rounded-md" method="get" action="/">
             // Main filter controls row
             <div class="flex flex-wrap items-end gap-4">
                 <div class="flex flex-col gap-1 flex-1 min-w-[200px]">

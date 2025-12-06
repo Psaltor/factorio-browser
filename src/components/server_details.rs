@@ -73,7 +73,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
         <div class="min-h-screen py-8 px-6 max-w-[800px] mx-auto">
             <a href="/" class="inline-block text-accent-primary no-underline mb-6 text-[0.95rem] transition-colors duration-200 hover:text-accent-secondary">{"← Back to Server List"}</a>
             
-            <div class="bg-bg-card border border-border-subtle rounded-lg max-w-[700px] w-full max-h-[90vh] overflow-y-auto relative animate-slide-up">
+            <div class="bg-bg-card/65 backdrop-blur-[10px] border border-border-subtle rounded-lg max-w-[700px] w-full max-h-[90vh] overflow-y-auto relative animate-slide-up">
                 <header class="p-8 pb-6 border-b border-border-subtle">
                     <h2 class="text-2xl mb-2 pr-12 break-words break-all">{parse_rich_text(&server.name)}</h2>
                     {if server.has_password {
