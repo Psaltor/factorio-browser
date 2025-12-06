@@ -59,6 +59,24 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
+    <meta name="description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
+    <meta name="keywords" content="Factorio, multiplayer, servers, server browser, gaming, factory">
+    <meta name="author" content="lambs.cafe">
+    <meta name="theme-color" content="#0d0d0f">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{title}">
+    <meta property="og:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
+    <meta property="og:image" content="https://lambs.cafe/wp-content/uploads/2025/12/factorio-logo.png">
+    <meta property="og:site_name" content="Factorio Server Browser">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{title}">
+    <meta name="twitter:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
+    <meta name="twitter:image" content="https://lambs.cafe/wp-content/uploads/2025/12/factorio-logo.png">
+    
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
