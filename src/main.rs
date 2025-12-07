@@ -68,14 +68,14 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     <meta property="og:type" content="website">
     <meta property="og:title" content="{title}">
     <meta property="og:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
-    <meta property="og:image" content="https://lambs.cafe/wp-content/uploads/2025/12/factorio-logo.png">
+    <meta property="og:image" content="https://lambs.cafe/static/favicon.svg">
     <meta property="og:site_name" content="Factorio Server Browser">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{title}">
     <meta name="twitter:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
-    <meta name="twitter:image" content="https://lambs.cafe/wp-content/uploads/2025/12/factorio-logo.png">
+    <meta name="twitter:image" content="https://lambs.cafe/static/favicon.svg">
     
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/style.css">
