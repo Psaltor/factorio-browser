@@ -2,7 +2,7 @@ use crate::components::filters::Filters;
 use crate::components::server_card::ServerCard;
 use crate::db::models::CachedServer;
 use semver::Version;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -52,10 +52,66 @@ pub fn server_list(props: &ServerListProps) -> Html {
         &props.current_version
     };
 
-    // Extract unique tags from all servers with frequency count
+    // Parse selected tags from comma-separated string
+    let selected_tags: Vec<String> = if props.selected_tags.is_empty() {
+        Vec::new()
+    } else {
+        props.selected_tags
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    };
+
+    // Helper closure to check if a server passes non-tag filters
+    let passes_non_tag_filters = |s: &CachedServer| {
+        // Search filter
+        if !props.current_search.is_empty() {
+            let search_lower = props.current_search.to_lowercase();
+            let name_matches = s.name.to_lowercase().contains(&search_lower);
+            let desc_matches = s.description.to_lowercase().contains(&search_lower);
+            let tags_match = s.tags.iter().any(|t| t.to_lowercase().contains(&search_lower));
+            if !name_matches && !desc_matches && !tags_match {
+                return false;
+            }
+        }
+
+        // Version filter
+        if !effective_version.is_empty() && !s.game_version.starts_with(effective_version) {
+            return false;
+        }
+
+        // Has players filter
+        if props.has_players && s.player_count == 0 {
+            return false;
+        }
+
+        // No password filter
+        if props.no_password && s.has_password {
+            return false;
+        }
+
+        // Dedicated server filter
+        if props.is_dedicated && !s.headless_server {
+            return false;
+        }
+
+        true
+    };
+
+    // Pre-filter servers (all filters except tags) for accurate tag counting
+    let pre_filtered_servers: Vec<&CachedServer> = props
+        .servers
+        .iter()
+        .filter(|s| passes_non_tag_filters(s))
+        .collect();
+
+    // Extract unique tags from pre-filtered servers with frequency count
+    // Each tag is counted once per server (deduplicated within each server)
     let mut tag_counts: HashMap<String, usize> = HashMap::new();
-    for server in &props.servers {
-        for tag in &server.tags {
+    for server in &pre_filtered_servers {
+        let unique_tags: HashSet<&String> = server.tags.iter().collect();
+        for tag in unique_tags {
             *tag_counts.entry(tag.clone()).or_insert(0) += 1;
         }
     }
@@ -69,7 +125,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
     // Exclude generic/unhelpful tags
     const EXCLUDED_TAGS: &[&str] = &["", "game", "tags"];
     
-    // Take top 15 most common tags (excluding unhelpful ones)
+    // Take top 20 most common tags (excluding unhelpful ones)
     let available_tags: Vec<String> = available_tags
         .into_iter()
         .filter(|(tag, _)| !EXCLUDED_TAGS.contains(&tag.as_str()))
@@ -77,60 +133,16 @@ pub fn server_list(props: &ServerListProps) -> Html {
         .map(|(tag, _)| tag)
         .collect();
 
-    // Parse selected tags from comma-separated string
-    let selected_tags: Vec<String> = if props.selected_tags.is_empty() {
-        Vec::new()
-    } else {
-        props.selected_tags
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect()
-    };
-
-    // Filter servers based on props
-    let filtered_servers: Vec<&CachedServer> = props
-        .servers
-        .iter()
+    // Apply tag filter on top of pre-filtered servers
+    let filtered_servers: Vec<&CachedServer> = pre_filtered_servers
+        .into_iter()
         .filter(|s| {
-            // Search filter
-            if !props.current_search.is_empty() {
-                let search_lower = props.current_search.to_lowercase();
-                let name_matches = s.name.to_lowercase().contains(&search_lower);
-                let desc_matches = s.description.to_lowercase().contains(&search_lower);
-                let tags_match = s.tags.iter().any(|t| t.to_lowercase().contains(&search_lower));
-                if !name_matches && !desc_matches && !tags_match {
-                    return false;
-                }
-            }
-
-            // Version filter
-            if !effective_version.is_empty() && !s.game_version.starts_with(effective_version) {
-                return false;
-            }
-
-            // Has players filter
-            if props.has_players && s.player_count == 0 {
-                return false;
-            }
-
-            // No password filter
-            if props.no_password && s.has_password {
-                return false;
-            }
-
-            // Dedicated server filter
-            if props.is_dedicated && !s.headless_server {
-                return false;
-            }
-
             // Tag filter (OR logic - server must have at least one selected tag)
             if !selected_tags.is_empty() {
                 if !selected_tags.iter().any(|t| s.tags.contains(t)) {
                     return false;
                 }
             }
-
             true
         })
         .collect();
