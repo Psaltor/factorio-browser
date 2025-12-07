@@ -1,16 +1,6 @@
 use crate::utils::strip_all_tags;
 use yew::prelude::*;
 
-#[derive(Clone, PartialEq, Default)]
-pub struct FilterState {
-    pub search: String,
-    pub version: String,
-    pub has_players: bool,
-    pub no_password: bool,
-    pub is_dedicated: bool,
-    pub tags: Vec<String>,
-}
-
 #[derive(Properties, PartialEq)]
 pub struct FiltersProps {
     #[prop_or_default]

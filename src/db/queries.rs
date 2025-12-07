@@ -251,15 +251,5 @@ impl DbClient {
         Ok(())
     }
 
-    /// Get the timestamp of the last cache update
-    pub async fn get_last_cache_time(&self) -> Result<Option<String>, DbError> {
-        let result: Vec<CachedServer> = self
-            .db
-            .query("SELECT cached_at FROM servers LIMIT 1")
-            .await?
-            .take(0)?;
-
-        Ok(result.first().map(|s| s.cached_at.clone()))
-    }
 }
 

@@ -130,18 +130,13 @@ impl From<reqwest::Error> for ApiError {
 }
 
 impl FactorioClient {
-    /// Create a new Factorio API client
-    pub fn new(username: String, token: String) -> Self {
-        Self {
+    /// Create a new client wrapped in Arc for sharing
+    pub fn new_shared(username: String, token: String) -> Arc<Self> {
+        Arc::new(Self {
             client: Client::new(),
             username,
             token,
-        }
-    }
-
-    /// Create a new client wrapped in Arc for sharing
-    pub fn new_shared(username: String, token: String) -> Arc<Self> {
-        Arc::new(Self::new(username, token))
+        })
     }
 
     /// Fetch all public game servers (requires authentication)
