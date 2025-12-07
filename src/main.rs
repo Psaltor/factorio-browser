@@ -177,12 +177,12 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
                     <main class="flex-1 max-w-[1400px] mx-auto py-8 px-6 w-full">
                         <div class="text-center py-8 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
                             <p class="mb-4">
-                                The requested server could not be found. If you viewed this page previously, the server may have restarted and triggered a new game_id.
-                                <br/>
+                                The requested server could not be found.<br/>
+                                If you viewed this page previously, the server may have restarted and triggered a new game_id.<br/>
                                 <b>It's a limitation of the Factorio Matchmaking API.</b>
                             </p>
                             <a href="/" class="text-accent-primary hover:text-accent-secondary transition-colors duration-200">
-                                "← Back to Server List"
+                                ← Back to Server List
                             </a>
                         </div>
                     </main>
