@@ -108,7 +108,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
             </a>
             
             // List row view
-            <a href={details_url} class="server-row hidden flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-2 px-4 bg-bg-card border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
+            <a href={details_url} class="server-row hidden flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-2 px-4 bg-bg-card/65 backdrop-blur-[10px] border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
                 <span class="flex-1 min-w-0 text-center sm:text-left overflow-hidden text-ellipsis whitespace-nowrap font-medium">
                     {parse_rich_text(&server.name)}
                     {if server.has_password {
