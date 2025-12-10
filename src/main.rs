@@ -1,5 +1,6 @@
 use factory_tracker::api::factorio::FactorioClient;
-use factory_tracker::api::routes::{get_server, get_server_history, get_servers, health};
+// TODO: Re-enable API routes later
+// use factory_tracker::api::routes::{get_server, get_server_history, get_servers, health};
 use factory_tracker::components::app::{App, AppProps};
 use factory_tracker::components::server_details::ServerDetails;
 use factory_tracker::db::queries::DbClient;
@@ -377,8 +378,9 @@ async fn main() -> Result<(), rocket::Error> {
     rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
-        .mount("/", routes![index, server_details_page, health, static_files])
-        .mount("/", routes![get_servers, get_server, get_server_history])
+        .mount("/", routes![index, server_details_page, static_files])
+        // TODO: Re-enable API routes later
+        // .mount("/", routes![health, get_servers, get_server, get_server_history])
         .launch()
         .await?;
 
