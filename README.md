@@ -37,7 +37,7 @@ Create a `.env` file in the project root with the following variables:
 | `FACTORIO_TOKEN` | Yes | — | Your Factorio.com API token |
 | `SURREAL_URL` | No | `mem://` | SurrealDB connection URL |
 | `SURREAL_NS` | No | `factorio` | Database namespace |
-| `SURREAL_DB` | No | `tracker` | Database name |
+| `SURREAL_DB` | No | `browser` | Database name |
 | `SURREAL_USER` | No | — | Database username |
 | `SURREAL_PASS` | No | — | Database password |
 

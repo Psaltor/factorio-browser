@@ -340,7 +340,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     let db_url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "mem://".to_string());
     let db_ns = std::env::var("SURREAL_NS").unwrap_or_else(|_| "factorio".to_string());
-    let db_name = std::env::var("SURREAL_DB").unwrap_or_else(|_| "tracker".to_string());
+    let db_name = std::env::var("SURREAL_DB").unwrap_or_else(|_| "browser".to_string());
     let db_user = std::env::var("SURREAL_USER").ok();
     let db_pass = std::env::var("SURREAL_PASS").ok();
 
