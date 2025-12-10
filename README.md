@@ -51,7 +51,7 @@ Create a `.env` file in the project root with the following variables:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Psaltor/factory-browser.git
-   cd factory-tracker
+   cd factory-browser
    ```
 
 2. **Create your environment file**
