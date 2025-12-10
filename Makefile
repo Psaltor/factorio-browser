@@ -2,13 +2,13 @@
 
 # Tailwind CSS compilation
 css:
-	./tailwindcss -i static/input.css -o static/style.css
+	tailwindcss -i static/input.css -o static/style.css
 
 css-watch:
-	./tailwindcss -i static/input.css -o static/style.css --watch
+	tailwindcss -i static/input.css -o static/style.css --watch
 
 css-prod:
-	./tailwindcss -i static/input.css -o static/style.css --minify
+	tailwindcss -i static/input.css -o static/style.css --minify
 
 # Rust build
 build: css-prod
