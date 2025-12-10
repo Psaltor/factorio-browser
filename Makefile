@@ -18,8 +18,9 @@ dev: css
 	cargo run
 
 # Cargo watch
-watch:
+watch: 
 	cargo watch -x "run"
+
 # Clean
 clean:
 	cargo clean
