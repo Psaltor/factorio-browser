@@ -1,11 +1,11 @@
-use factory_tracker::api::factorio::FactorioClient;
+use factorio_browser::api::factorio::FactorioClient;
 // TODO: Re-enable API routes later
-// use factory_tracker::api::routes::{get_server, get_server_history, get_servers, health};
-use factory_tracker::components::app::{App, AppProps};
-use factory_tracker::components::server_details::ServerDetails;
-use factory_tracker::db::queries::DbClient;
-use factory_tracker::db::models::CachedServer;
-use factory_tracker::utils::strip_all_tags;
+// use factorio_browser::api::routes::{get_server, get_server_history, get_servers, health};
+use factorio_browser::components::app::{App, AppProps};
+use factorio_browser::components::server_details::ServerDetails;
+use factorio_browser::db::queries::DbClient;
+use factorio_browser::db::models::CachedServer;
+use factorio_browser::utils::strip_all_tags;
 use rocket::form::FromForm;
 use rocket::fs::{relative, NamedFile};
 use rocket::http::Header;
@@ -124,7 +124,7 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
 /// Server details page
 #[get("/server/<game_id>")]
 async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
-    use factory_tracker::components::server_details::ModEntry;
+    use factorio_browser::components::server_details::ModEntry;
     
     // Get server from in-memory cache (avoids race condition during DB refresh)
     let server = state.cached_servers.read().await
@@ -157,7 +157,7 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
     match server {
         Some(server) => {
             let title = format!("{} - Factorio Server Browser", strip_all_tags(&server.name));
-            let props = factory_tracker::components::server_details::ServerDetailsProps { 
+            let props = factorio_browser::components::server_details::ServerDetailsProps { 
                 server, 
                 history,
                 players,
@@ -216,9 +216,9 @@ async fn static_files(file: PathBuf) -> Option<CachedFile> {
 
 /// Fill gaps in history data with 0-player entries
 /// Since we only record when players > 0, we need to fill in periods of inactivity
-fn fill_history_gaps(raw_history: Vec<factory_tracker::db::models::ServerHistory>) -> Vec<factory_tracker::components::server_details::HistoryEntry> {
+fn fill_history_gaps(raw_history: Vec<factorio_browser::db::models::ServerHistory>) -> Vec<factorio_browser::components::server_details::HistoryEntry> {
     use chrono::{DateTime, Duration, Utc};
-    use factory_tracker::components::server_details::HistoryEntry;
+    use factorio_browser::components::server_details::HistoryEntry;
     use std::collections::HashMap;
     
     let now = Utc::now();

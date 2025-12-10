@@ -1,5 +1,5 @@
 [package]
-name = "factory-tracker"
+name = "factorio-browser"
 version = "0.1.0"
 edition = "2024"
 
