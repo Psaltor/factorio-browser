@@ -21,7 +21,8 @@ A web-based Factorio multiplayer server browser with filtering, search, and play
 
 # Prerequisites
 
-- Rust 1.91.1+
+- [Rust](https://rust-lang.org/tools/install/) 1.91.1+
+- [Tailwindcss](https://tailwindcss.com/) binary in your $PATH
 - Factorio account [token](https://www.factorio.com/profile) (for API access)
 - SurrealDB instance (optional in dev, since it defaults to in-memory for development)
 
