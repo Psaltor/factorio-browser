@@ -321,27 +321,27 @@ async fn refresh_servers(state: Arc<AppState>) {
     }
 }
 
-#[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore) -> shuttle_rocket::ShuttleRocket {
-    // Load environment variables
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error> {
+    // Load environment variables from .env file
     dotenvy::dotenv().ok();
 
-    // Get configuration from secrets
-    let username = secrets.get("FACTORIO_USERNAME").unwrap_or_else(|| {
+    // Get configuration from environment variables
+    let username = std::env::var("FACTORIO_USERNAME").unwrap_or_else(|_| {
         eprintln!("Warning: FACTORIO_USERNAME not set, API calls will fail");
         String::new()
     });
 
-    let token = secrets.get("FACTORIO_TOKEN").unwrap_or_else(|| {
+    let token = std::env::var("FACTORIO_TOKEN").unwrap_or_else(|_| {
         eprintln!("Warning: FACTORIO_TOKEN not set, API calls will fail");
         String::new()
     });
 
-    let db_url = secrets.get("SURREAL_URL").unwrap_or_else(|| "mem://".to_string());
-    let db_ns = secrets.get("SURREAL_NS").unwrap_or_else(|| "factorio".to_string());
-    let db_name = secrets.get("SURREAL_DB").unwrap_or_else(|| "tracker".to_string());
-    let db_user = secrets.get("SURREAL_USER");
-    let db_pass = secrets.get("SURREAL_PASS");
+    let db_url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "mem://".to_string());
+    let db_ns = std::env::var("SURREAL_NS").unwrap_or_else(|_| "factorio".to_string());
+    let db_name = std::env::var("SURREAL_DB").unwrap_or_else(|_| "tracker".to_string());
+    let db_user = std::env::var("SURREAL_USER").ok();
+    let db_pass = std::env::var("SURREAL_PASS").ok();
 
     // Initialize database
     let db = DbClient::connect(
@@ -373,12 +373,14 @@ async fn main(#[shuttle_runtime::Secrets] secrets: shuttle_runtime::SecretStore)
         refresh_servers(refresh_state).await;
     });
 
-    // Build Rocket server
-    let rocket = rocket::build()
+    // Build and launch Rocket server
+    rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
         .mount("/", routes![index, server_details_page, health, static_files])
-        .mount("/", routes![get_servers, get_server, get_server_history]);
+        .mount("/", routes![get_servers, get_server, get_server_history])
+        .launch()
+        .await?;
 
-    Ok(rocket.into())
+    Ok(())
 }

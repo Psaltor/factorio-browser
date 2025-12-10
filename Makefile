@@ -12,14 +12,14 @@ css-prod:
 
 # Rust build
 build: css-prod
-	shuttle build --release
+	cargo build --release
 
 dev: css
-	shuttle run
+	cargo run
 
 # Cargo watch
 watch:
-	cargo watch -x "shuttle run"
+	cargo watch -x "run"
 # Clean
 clean:
 	cargo clean
