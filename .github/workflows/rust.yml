@@ -3,6 +3,7 @@ name: Rust
 on:
   push:
     branches: [ "master" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
 
@@ -11,12 +12,41 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+    - uses: Swatinem/rust-cache@v2
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: Swatinem/rust-cache@v2
+    - name: Build release
+      run: cargo build --release --verbose
+    - name: Package release
+      run: |
+        mkdir -p release/factorio-browser
+        cp target/release/factorio-browser release/factorio-browser/
+        cp -r static release/factorio-browser/
+        tar -czvf factorio-browser-linux-x86_64.tar.gz -C release factorio-browser
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: factorio-browser-linux-x86_64
+        path: factorio-browser-linux-x86_64.tar.gz
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: factorio-browser-linux-x86_64.tar.gz
+        generate_release_notes: true
