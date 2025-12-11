@@ -2,5 +2,8 @@
 .env
 *.log
 tailwindcss
-.shuttle*
-Secrets*.toml
+*.tar.gz
+
+# makepkg artifacts
+pkg/**/
+pkg/*.pkg.tar*
