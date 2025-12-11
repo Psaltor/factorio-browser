@@ -7,12 +7,11 @@ use factorio_browser::db::queries::DbClient;
 use factorio_browser::db::models::CachedServer;
 use factorio_browser::utils::strip_all_tags;
 use rocket::form::FromForm;
-use rocket::fs::{relative, NamedFile};
+use rocket::fs::{FileServer, NamedFile};
 use rocket::http::Header;
 use rocket::response::content::RawHtml;
 use rocket::response::{Responder, Response};
 use rocket::Request;
-use std::path::{Path, PathBuf};
 use rocket::{get, routes, State};
 use std::sync::Arc;
 use std::time::Duration;
@@ -207,14 +206,7 @@ impl<'r> Responder<'r, 'static> for CachedFile {
     }
 }
 
-/// Serve static files from the static directory with caching headers
-#[get("/static/<file..>")]
-async fn static_files(file: PathBuf) -> Option<CachedFile> {
-    let path = Path::new(relative!("static")).join(file);
-    NamedFile::open(path).await.ok().map(CachedFile)
-}
-
-/// Fill gaps in history data with 0-player entries
+//// Fill gaps in history data with 0-player entries
 /// Since we only record when players > 0, we need to fill in periods of inactivity
 fn fill_history_gaps(raw_history: Vec<factorio_browser::db::models::ServerHistory>) -> Vec<factorio_browser::components::server_details::HistoryEntry> {
     use chrono::{DateTime, Duration, Utc};
@@ -374,11 +366,15 @@ async fn main() -> Result<(), rocket::Error> {
         refresh_servers(refresh_state).await;
     });
 
+    let cwd = std::env::current_dir().expect("Cannot get current directory");
+    let static_dir = cwd.join("static");
+
     // Build and launch Rocket server
     rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
-        .mount("/", routes![index, server_details_page, static_files])
+        .mount("/", routes![index, server_details_page])
+        .mount("/static", FileServer::from(static_dir))
         // TODO: Re-enable API routes later
         // .mount("/", routes![health, get_servers, get_server, get_server_history])
         .launch()
