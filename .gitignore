@@ -3,7 +3,3 @@
 *.log
 tailwindcss
 *.tar.gz
-
-# makepkg artifacts
-pkg/**/
-pkg/*.pkg.tar*
