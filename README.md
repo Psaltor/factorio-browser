@@ -25,7 +25,7 @@ A web-based Factorio multiplayer server browser with filtering, search, and play
 - [Tailwindcss](https://tailwindcss.com/) binary in your $PATH
 - [Make](https://www.gnu.org/software/make/)
 - Factorio account [token](https://www.factorio.com/profile) (for API access)
-- SurrealDB instance (optional in dev, since it defaults to in-memory for development)
+- SurrealDB instance (optional, defaults to in-memory for development and can use rocksdb for persistent storage without a SurrealDB instance)
 
 ## Configuration
 
