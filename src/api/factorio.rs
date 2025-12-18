@@ -72,7 +72,7 @@ pub struct GameServer {
 }
 
 /// Detailed server information from get-game-details endpoint
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GameDetails {
     pub game_id: u64,
     pub name: String,
@@ -97,7 +97,7 @@ pub struct GameDetails {
 }
 
 /// Mod information for detailed server view
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModInfo {
     pub name: String,
     pub version: String,

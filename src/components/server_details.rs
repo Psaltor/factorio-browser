@@ -1,5 +1,5 @@
+use crate::api::factorio::GameDetails;
 use crate::components::footer::Footer;
-use crate::db::models::CachedServer;
 use crate::utils::parse_rich_text;
 use yew::prelude::*;
 
@@ -10,22 +10,11 @@ pub struct HistoryEntry {
     pub recorded_at: String,
 }
 
-/// Mod info for display
-#[derive(Clone, PartialEq)]
-pub struct ModEntry {
-    pub name: String,
-    pub version: String,
-}
-
 #[derive(Properties, PartialEq, Clone)]
 pub struct ServerDetailsProps {
-    pub server: CachedServer,
+    pub server: GameDetails,
     #[prop_or_default]
     pub history: Vec<HistoryEntry>,
-    #[prop_or_default]
-    pub players: Vec<String>,
-    #[prop_or_default]
-    pub mods: Vec<ModEntry>,
 }
 
 /// Detailed server view component (SSR-compatible, standalone page)
@@ -34,7 +23,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
     let server = &props.server;
 
     // Format game time (API returns minutes)
-    let total_minutes = server.game_time_elapsed;
+    let total_minutes = server.game_time_elapsed.as_u64();
     let days = total_minutes / (60 * 24);
     let hours = (total_minutes % (60 * 24)) / 60;
     let minutes = total_minutes % 60;
@@ -44,6 +33,10 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
     } else {
         format!("{}h {}m", hours, minutes)
     };
+
+    // Derive counts directly from the API response
+    let player_count = server.players.len();
+    let mod_count = server.mods.len();
 
     // Calculate history stats and aggregate into 24 hourly buckets
     let (history_stats, hourly_data) = if !props.history.is_empty() {
@@ -98,7 +91,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     <div class="flex items-center gap-4 p-4 bg-bg-inset border border-border-subtle rounded-sm">
                         <span class="text-2xl">{"👥"}</span>
                         <div class="flex flex-col">
-                            <span class="text-lg font-semibold font-mono text-accent-primary">{format!("{}/{}", server.player_count, server.max_players)}</span>
+                            <span class="text-lg font-semibold font-mono text-accent-primary">{format!("{}/{}", player_count, server.max_players)}</span>
                             <span class="text-xs text-text-secondary">{"Players"}</span>
                         </div>
                     </div>
@@ -106,7 +99,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     <div class="flex items-center gap-4 p-4 bg-bg-inset border border-border-subtle rounded-sm">
                         <span class="text-2xl">{"🎮"}</span>
                         <div class="flex flex-col">
-                            <span class="text-lg font-semibold font-mono text-accent-primary">{&server.game_version}</span>
+                            <span class="text-lg font-semibold font-mono text-accent-primary">{&server.application_version.game_version}</span>
                             <span class="text-xs text-text-secondary">{"Version"}</span>
                         </div>
                     </div>
@@ -122,7 +115,7 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     <div class="flex items-center gap-4 p-4 bg-bg-inset border border-border-subtle rounded-sm">
                         <span class="text-2xl">{"📦"}</span>
                         <div class="flex flex-col">
-                            <span class="text-lg font-semibold font-mono text-accent-primary">{if server.mod_count > 0 { server.mod_count.to_string() } else { "Vanilla".to_string() }}</span>
+                            <span class="text-lg font-semibold font-mono text-accent-primary">{if mod_count > 0 { mod_count.to_string() } else { "Vanilla".to_string() }}</span>
                             <span class="text-xs text-text-secondary">{"Mods"}</span>
                         </div>
                     </div>
@@ -162,12 +155,12 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     html! {}
                 }}
                 
-                {if !props.players.is_empty() {
+                {if !server.players.is_empty() {
                     html! {
                         <section class="p-6 px-8 border-b border-border-subtle">
                             <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{"Online Players"}</h3>
                             <div class="flex flex-wrap gap-2">
-                                {for props.players.iter().map(|player| {
+                                {for server.players.iter().map(|player| {
                                     html! { <span class="py-1 px-2 bg-bg-dark border border-border-accent rounded-sm text-sm font-mono">{player}</span> }
                                 })}
                             </div>
@@ -177,12 +170,12 @@ pub fn server_details(props: &ServerDetailsProps) -> Html {
                     html! {}
                 }}
                 
-                {if !props.mods.is_empty() {
+                {if !server.mods.is_empty() {
                     html! {
                         <section class="p-6 px-8 border-b border-border-subtle">
                             <h3 class="text-[0.85rem] text-text-secondary uppercase tracking-wider mb-4">{"Mods"}</h3>
                             <div class="mods-list grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-2 max-h-[400px] overflow-y-auto">
-                                {for props.mods.iter().map(|m| {
+                                {for server.mods.iter().map(|m| {
                                     let mod_url = format!("https://mods.factorio.com/mod/{}", m.name);
                                     html! { 
                                         <a href={mod_url} class="flex justify-between items-center py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-[0.85rem] no-underline transition-all duration-200 hover:border-accent-primary hover:bg-bg-card" target="_blank" rel="noopener noreferrer">

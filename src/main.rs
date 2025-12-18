@@ -123,25 +123,8 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
 /// Server details page
 #[get("/server/<game_id>")]
 async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
-    use factorio_browser::components::server_details::ModEntry;
-    
-    // Get server from in-memory cache (avoids race condition during DB refresh)
-    let server = state.cached_servers.read().await
-        .iter()
-        .find(|s| s.game_id == game_id)
-        .cloned();
-    
-    // Fetch fresh details from API for players and mods
-    let (players, mods) = match state.factorio_client.get_game_details(game_id).await {
-        Ok(details) => (
-            details.players,
-            details.mods.into_iter().map(|m| ModEntry {
-                name: m.name,
-                version: m.version,
-            }).collect(),
-        ),
-        Err(_) => (Vec::new(), Vec::new()),
-    };
+    // Always fetch fresh details from API
+    let api_result = state.factorio_client.get_game_details(game_id).await;
     
     // Fetch raw history and fill gaps with 0-player entries
     // Since we only record when players > 0, we need to fill in the timeline
@@ -153,20 +136,19 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
     
     let history = fill_history_gaps(raw_history);
 
-    match server {
-        Some(server) => {
-            let title = format!("{} - Factorio Server Browser", strip_all_tags(&server.name));
+    match api_result {
+        Ok(details) => {
+            let title = format!("{} - Factorio Server Browser", strip_all_tags(&details.name));
+            
             let props = factorio_browser::components::server_details::ServerDetailsProps { 
-                server, 
+                server: details, 
                 history,
-                players,
-                mods,
             };
             let renderer = ServerRenderer::<ServerDetails>::with_props(move || props.clone());
             let html_content = renderer.render().await;
             RawHtml(html_shell_with_video(&title, html_content, true))
         }
-        None => {
+        Err(_) => {
             let html_content = r#"
                 <div class="min-h-screen flex flex-col">
                     <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
