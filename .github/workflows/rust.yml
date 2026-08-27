@@ -15,12 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: Swatinem/rust-cache@v2
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features --locked -- -D warnings
+    - name: Verify generated CSS
+      run: |
+        npm install --global @tailwindcss/cli@4.3.3
+        make css-prod
+        git diff --exit-code -- static/style.css
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --locked --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --all-targets --all-features --locked --verbose
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -30,10 +39,14 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: Swatinem/rust-cache@v2
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+    - name: Generate CSS
+      run: |
+        npm install --global @tailwindcss/cli@4.3.3
+        make css-prod
     - name: Build release
-      run: cargo build --release --verbose
+      run: cargo build --release --locked --verbose
     - name: Package release
       run: |
         mkdir -p release/factorio-browser
@@ -41,12 +54,12 @@ jobs:
         cp -r static release/factorio-browser/
         tar -czvf factorio-browser-linux-x86_64.tar.gz -C release factorio-browser
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: factorio-browser-linux-x86_64
         path: factorio-browser-linux-x86_64.tar.gz
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
       with:
         files: factorio-browser-linux-x86_64.tar.gz
         generate_release_notes: true

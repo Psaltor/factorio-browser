@@ -5,7 +5,7 @@ use yew::prelude::*;
 const ICON_TAGS: &[&str] = &[
     "img",
     "item",
-    "entity", 
+    "entity",
     "technology",
     "recipe",
     "item-group",
@@ -25,14 +25,14 @@ const ICON_TAGS: &[&str] = &[
     "space-platform",
     "planet",
     "space-location",
-    "space-age"
+    "space-age",
 ];
 
 /// Strip all unsupported Factorio rich text tags (icons, images, etc.)
 /// These tags are self-closing: [item=iron-plate] (no closing tag)
 fn strip_icon_tags(text: &str) -> String {
     let mut result = text.to_string();
-    
+
     for tag in ICON_TAGS {
         let pattern = format!("[{}=", tag);
         while let Some(start) = result.find(&pattern) {
@@ -46,7 +46,7 @@ fn strip_icon_tags(text: &str) -> String {
             }
         }
     }
-    
+
     result
 }
 
@@ -58,12 +58,12 @@ const PAIRED_TAGS: &[&str] = &["color", "font"];
 pub fn strip_all_tags(text: &str) -> String {
     // First strip icon tags
     let mut result = strip_icon_tags(text);
-    
+
     // Then strip paired tags (keep content, remove tags)
     for tag in PAIRED_TAGS {
         let open_pattern = format!("[{}=", tag);
         let close_pattern = format!("[/{}]", tag);
-        
+
         // Remove opening tags: [color=...] or [font=...]
         while let Some(start) = result.find(&open_pattern) {
             if let Some(end_offset) = result[start..].find(']') {
@@ -73,13 +73,13 @@ pub fn strip_all_tags(text: &str) -> String {
                 break;
             }
         }
-        
+
         // Remove closing tags: [/color] or [/font]
         while let Some(start) = result.find(&close_pattern) {
             result.replace_range(start..start + close_pattern.len(), "");
         }
     }
-    
+
     // Clean up any extra whitespace
     result.split_whitespace().collect::<Vec<_>>().join(" ")
 }
@@ -104,7 +104,7 @@ fn text_with_newlines(text: &str) -> Html {
 fn find_next_tag(text: &str) -> Option<(usize, &str)> {
     let color_pos = text.find("[color=");
     let font_pos = text.find("[font=");
-    
+
     match (color_pos, font_pos) {
         (Some(c), Some(f)) => {
             if c < f {
@@ -125,7 +125,7 @@ fn find_next_tag(text: &str) -> Option<(usize, &str)> {
 pub fn parse_rich_text(text: &str) -> Html {
     // First, strip all icon tags that we can't render
     let cleaned = strip_icon_tags(text);
-    
+
     let mut result: Vec<Html> = Vec::new();
     let mut remaining = cleaned.as_str();
 
@@ -151,10 +151,10 @@ pub fn parse_rich_text(text: &str) -> Html {
                 // Find the closing tag
                 if let Some(close) = after_tag.find(&close_tag) {
                     let content = &after_tag[..close];
-                    
+
                     // Recursively parse content (for nested tags)
                     let inner = parse_rich_text(content);
-                    
+
                     let styled = match tag_type {
                         "color" => {
                             let css_color = factorio_color_to_css(value);
@@ -170,7 +170,7 @@ pub fn parse_rich_text(text: &str) -> Html {
                         }
                         _ => inner,
                     };
-                    
+
                     result.push(styled);
                     remaining = &after_tag[close + close_len..];
                     continue;

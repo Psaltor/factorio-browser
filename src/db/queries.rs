@@ -1,8 +1,8 @@
 use crate::api::factorio::GameServer;
 use crate::db::models::{CachedServer, NewCachedServer, NewServerHistory, ServerHistory};
-use surrealdb::engine::any::{connect, Any};
-use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
+use surrealdb::engine::any::{Any, connect};
+use surrealdb::opt::auth::Root;
 
 /// Database client wrapper for SurrealDB operations
 #[derive(Clone)]
@@ -43,20 +43,36 @@ impl DbClient {
         username: Option<&str>,
         password: Option<&str>,
     ) -> Result<Self, DbError> {
+        let is_remote = ["ws://", "wss://", "http://", "https://"]
+            .iter()
+            .any(|scheme| url.starts_with(scheme));
+        if is_remote && matches!((username, password), (Some(_), None) | (None, Some(_))) {
+            return Err(DbError::Connection(
+                "SURREAL_USER and SURREAL_PASS must be provided together".to_string(),
+            ));
+        }
+
         let db = connect(url)
             .await
             .map_err(|e| DbError::Connection(e.to_string()))?;
 
-        // Sign in if credentials are provided (required for remote connections)
-        if url.starts_with("ws://") || url.starts_with("wss://") {
-            let user = username.unwrap_or("root");
-            let pass = password.unwrap_or("root");
-            db.signin(Root {
-                username: user,
-                password: pass,
-            })
-            .await
-            .map_err(|e| DbError::Connection(e.to_string()))?;
+        if is_remote {
+            match (username, password) {
+                (Some(user), Some(pass)) => {
+                    db.signin(Root {
+                        username: user,
+                        password: pass,
+                    })
+                    .await
+                    .map_err(|e| DbError::Connection(e.to_string()))?;
+                }
+                (None, None) => {}
+                _ => {
+                    return Err(DbError::Connection(
+                        "SURREAL_USER and SURREAL_PASS must be provided together".to_string(),
+                    ));
+                }
+            }
         }
 
         db.use_ns(namespace)
@@ -107,6 +123,7 @@ impl DbClient {
                 DEFINE FIELD IF NOT EXISTS recorded_at ON server_history TYPE string;
                 DEFINE INDEX IF NOT EXISTS history_game_idx ON server_history FIELDS game_id;
                 DEFINE INDEX IF NOT EXISTS history_time_idx ON server_history FIELDS recorded_at;
+                DEFINE INDEX IF NOT EXISTS history_game_time_idx ON server_history FIELDS game_id, recorded_at;
                 "#,
             )
             .await?;
@@ -119,38 +136,29 @@ impl DbClient {
     pub async fn cache_servers(&self, servers: Vec<GameServer>) -> Result<usize, DbError> {
         let start = std::time::Instant::now();
         let count = servers.len();
-        
+
         // Use native insert_many for better performance
         let new_servers: Vec<NewCachedServer> = servers.into_iter().map(|s| s.into()).collect();
-        
-        // Begin transaction for atomic delete + insert
-        self.db.query("BEGIN TRANSACTION").await?;
-        
-        // Delete all existing servers
-        if let Err(e) = self.db.query("DELETE FROM servers").await {
-            self.db.query("CANCEL TRANSACTION").await.ok();
-            return Err(e.into());
-        }
-        
-        // Insert in batches for better performance
-        const BATCH_SIZE: usize = 500;
-        for chunk in new_servers.chunks(BATCH_SIZE) {
-            if let Err(e) = self.db
-                .insert::<Vec<CachedServer>>("servers")
-                .content(chunk.to_vec())
-                .await
-            {
-                self.db.query("CANCEL TRANSACTION").await.ok();
-                return Err(e.into());
-            }
-        }
-        
-        // Commit transaction
-        self.db.query("COMMIT TRANSACTION").await?;
+
+        self.db
+            .query(
+                r#"
+                BEGIN TRANSACTION;
+                DELETE FROM servers;
+                INSERT INTO servers $servers;
+                COMMIT TRANSACTION;
+                "#,
+            )
+            .bind(("servers", new_servers))
+            .await?
+            .check()?;
 
         let elapsed = start.elapsed();
         if elapsed.as_millis() > 500 {
-            eprintln!("[DB SLOW] cache_servers took {:?} for {} servers", elapsed, count);
+            eprintln!(
+                "[DB SLOW] cache_servers took {:?} for {} servers",
+                elapsed, count
+            );
         }
 
         Ok(count)
@@ -161,32 +169,34 @@ impl DbClient {
         let start = std::time::Instant::now();
         let now = chrono::Utc::now().to_rfc3339();
 
-        // Only record history for servers with players (significant data reduction)
         let history_records: Vec<NewServerHistory> = servers
             .iter()
-            .filter(|server| !server.players.is_empty())
             .map(|server| NewServerHistory {
                 game_id: server.game_id,
                 player_count: server.players.len(),
                 recorded_at: now.clone(),
             })
             .collect();
-        
+
         if history_records.is_empty() {
             return Ok(());
         }
-        
+
         let record_count = history_records.len();
-        
+
         // Use native insert for better performance
-        let _: Vec<ServerHistory> = self.db
+        let _: Vec<ServerHistory> = self
+            .db
             .insert("server_history")
             .content(history_records)
             .await?;
 
         let elapsed = start.elapsed();
         if elapsed.as_millis() > 500 {
-            eprintln!("[DB SLOW] record_player_counts took {:?} for {} records", elapsed, record_count);
+            eprintln!(
+                "[DB SLOW] record_player_counts took {:?} for {} records",
+                elapsed, record_count
+            );
         }
 
         Ok(())
@@ -221,18 +231,19 @@ impl DbClient {
         game_id: u64,
         hours: u32,
     ) -> Result<Vec<ServerHistory>, DbError> {
+        let hours = hours.clamp(1, 168);
+        let cutoff = chrono::Utc::now() - chrono::Duration::hours(i64::from(hours));
         let history: Vec<ServerHistory> = self
             .db
             .query(
                 r#"
                 SELECT * FROM server_history 
-                WHERE game_id = $game_id 
+                WHERE game_id = $game_id AND recorded_at >= $cutoff
                 ORDER BY recorded_at DESC 
-                LIMIT $limit
                 "#,
             )
             .bind(("game_id", game_id))
-            .bind(("limit", hours * 60)) // Assuming ~1 record per minute
+            .bind(("cutoff", cutoff.to_rfc3339()))
             .await?
             .take(0)?;
 
@@ -250,6 +261,93 @@ impl DbClient {
 
         Ok(())
     }
-
 }
 
+#[cfg(test)]
+mod tests {
+    use super::DbClient;
+    use crate::api::factorio::{ApplicationVersion, GameServer, GameTime};
+
+    fn server(game_id: u64, name: &str, players: &[&str]) -> GameServer {
+        GameServer {
+            game_id,
+            name: name.to_string(),
+            description: String::new(),
+            max_players: 20,
+            players: players.iter().map(|player| player.to_string()).collect(),
+            game_time_elapsed: GameTime::Number(60),
+            has_password: false,
+            tags: Vec::new(),
+            mod_count: 0,
+            host_address: None,
+            application_version: ApplicationVersion {
+                game_version: "2.0.0".to_string(),
+                build_version: 1,
+                build_mode: "headless".to_string(),
+                platform: "linux64".to_string(),
+            },
+            has_mods: false,
+            headless_server: true,
+            server_id: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn cache_replacement_rolls_back_on_duplicate_game_ids() {
+        let db = DbClient::connect("mem://", "test", "cache_rollback", None, None)
+            .await
+            .unwrap();
+        db.cache_servers(vec![server(1, "original", &[])])
+            .await
+            .unwrap();
+
+        let result = db
+            .cache_servers(vec![
+                server(2, "duplicate one", &[]),
+                server(2, "duplicate two", &[]),
+            ])
+            .await;
+        assert!(result.is_err());
+
+        let cached = db.get_all_servers().await.unwrap();
+        assert_eq!(cached.len(), 1);
+        assert_eq!(cached[0].game_id, 1);
+        assert_eq!(cached[0].name, "original");
+    }
+
+    #[tokio::test]
+    async fn empty_cache_replacement_clears_existing_servers() {
+        let db = DbClient::connect("mem://", "test", "cache_clear", None, None)
+            .await
+            .unwrap();
+        db.cache_servers(vec![server(1, "original", &[])])
+            .await
+            .unwrap();
+
+        db.cache_servers(Vec::new()).await.unwrap();
+        assert!(db.get_all_servers().await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn records_zero_player_observations() {
+        let db = DbClient::connect("mem://", "test", "zero_history", None, None)
+            .await
+            .unwrap();
+        db.record_player_counts(&[server(1, "empty", &[])])
+            .await
+            .unwrap();
+
+        let history = db.get_server_history(1, 24).await.unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].player_count, 0);
+    }
+
+    #[tokio::test]
+    async fn rejects_partial_remote_credentials_before_connecting() {
+        let error = DbClient::connect("ws://127.0.0.1:1", "test", "test", Some("user"), None)
+            .await
+            .err()
+            .unwrap();
+        assert!(error.to_string().contains("must be provided together"));
+    }
+}

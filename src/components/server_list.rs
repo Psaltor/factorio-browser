@@ -56,7 +56,8 @@ pub fn server_list(props: &ServerListProps) -> Html {
     let selected_tags: Vec<String> = if props.selected_tags.is_empty() {
         Vec::new()
     } else {
-        props.selected_tags
+        props
+            .selected_tags
             .split(',')
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
@@ -70,7 +71,10 @@ pub fn server_list(props: &ServerListProps) -> Html {
             let search_lower = props.current_search.to_lowercase();
             let name_matches = s.name.to_lowercase().contains(&search_lower);
             let desc_matches = s.description.to_lowercase().contains(&search_lower);
-            let tags_match = s.tags.iter().any(|t| t.to_lowercase().contains(&search_lower));
+            let tags_match = s
+                .tags
+                .iter()
+                .any(|t| t.to_lowercase().contains(&search_lower));
             if !name_matches && !desc_matches && !tags_match {
                 return false;
             }
@@ -115,16 +119,14 @@ pub fn server_list(props: &ServerListProps) -> Html {
             *tag_counts.entry(tag.clone()).or_insert(0) += 1;
         }
     }
-    
+
     // Sort tags by frequency (descending), then alphabetically
     let mut available_tags: Vec<(String, usize)> = tag_counts.into_iter().collect();
-    available_tags.sort_by(|a, b| {
-        b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))
-    });
-    
+    available_tags.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+
     // Exclude generic/unhelpful tags
     const EXCLUDED_TAGS: &[&str] = &["", "game", "tags"];
-    
+
     // Take top 20 most common tags (excluding unhelpful ones)
     let available_tags: Vec<String> = available_tags
         .into_iter()
@@ -138,10 +140,8 @@ pub fn server_list(props: &ServerListProps) -> Html {
         .into_iter()
         .filter(|s| {
             // Tag filter (OR logic - server must have at least one selected tag)
-            if !selected_tags.is_empty() {
-                if !selected_tags.iter().any(|t| s.tags.contains(t)) {
-                    return false;
-                }
+            if !selected_tags.is_empty() && !selected_tags.iter().any(|t| s.tags.contains(t)) {
+                return false;
             }
             true
         })
@@ -153,7 +153,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
 
     html! {
         <div>
-            <Filters 
+            <Filters
                 current_search={props.current_search.clone()}
                 current_version={props.current_version.clone()}
                 has_players={props.has_players}
@@ -164,7 +164,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 available_tags={available_tags}
                 selected_tags={selected_tags}
             />
-            
+
             // Show error banner if there's an error (but still show cached servers below)
             {if let Some(ref error) = props.error {
                 html! {
@@ -175,7 +175,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
             } else {
                 html! {}
             }}
-            
+
             <div class="flex justify-between items-center flex-wrap gap-4 mb-4 text-text-secondary text-sm">
                 <span>
                     {format!("{} of {} servers", filtered_servers.len(), props.servers.len())}
@@ -188,7 +188,7 @@ pub fn server_list(props: &ServerListProps) -> Html {
                     }}
                     {" players online"}
                 </span>
-                
+
                 <div class="flex items-center gap-2">
                     <span class="text-text-muted text-[0.85rem]">{"Sort by:"}</span>
                     <button type="button" class="sort-button py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="name">
@@ -200,14 +200,14 @@ pub fn server_list(props: &ServerListProps) -> Html {
                     <button type="button" class="sort-button py-1 px-2 bg-bg-inset border border-border-subtle rounded-sm text-text-secondary font-display text-[0.85rem] cursor-pointer transition-all duration-200 hover:border-accent-primary hover:text-accent-primary" data-sort="time">
                         {"Game Time "}<span class="sort-arrow text-xs ml-0.5">{""}</span>
                     </button>
-                    
+
                     <div class="flex gap-0.5 ml-4 pl-4 border-l border-border-subtle">
                         <button type="button" class="view-btn active py-1 px-2 bg-bg-inset border border-border-subtle text-text-secondary text-base cursor-pointer transition-all duration-200 leading-none rounded-l-sm hover:border-accent-primary hover:text-accent-primary" data-view="grid" title="Grid view">{"▦"}</button>
                         <button type="button" class="view-btn py-1 px-2 bg-bg-inset border border-border-subtle border-l-0 text-text-secondary text-base cursor-pointer transition-all duration-200 leading-none rounded-r-sm hover:border-accent-primary hover:text-accent-primary" data-view="list" title="List view">{"☰"}</button>
                     </div>
                 </div>
             </div>
-            
+
             <div class="server-grid grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
                 <div class="list-header hidden items-center gap-4 py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm sticky top-0 z-10 text-xs font-semibold uppercase tracking-widest text-text-secondary">
                     <span class="hidden sm:flex sm:flex-1 min-w-0">{"Name"}</span>
@@ -218,13 +218,13 @@ pub fn server_list(props: &ServerListProps) -> Html {
                 </div>
                 {for filtered_servers.iter().map(|server| {
                     html! {
-                        <ServerCard 
-                            server={(*server).clone()} 
+                        <ServerCard
+                            server={(*server).clone()}
                         />
                     }
                 })}
             </div>
-            
+
             {if filtered_servers.is_empty() {
                 html! {
                     <div class="text-center py-12 text-text-muted">

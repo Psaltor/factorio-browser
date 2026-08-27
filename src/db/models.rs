@@ -88,5 +88,3 @@ impl From<crate::api::factorio::GameServer> for NewCachedServer {
         }
     }
 }
-
-

@@ -2,7 +2,7 @@ use crate::db::models::CachedServer;
 use crate::db::queries::DbClient;
 use rocket::form::FromForm;
 use rocket::serde::json::Json;
-use rocket::{get, State};
+use rocket::{State, get};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -67,38 +67,43 @@ pub async fn get_servers(
                 let search_lower = search.to_lowercase();
                 let name_matches = s.name.to_lowercase().contains(&search_lower);
                 let desc_matches = s.description.to_lowercase().contains(&search_lower);
-                let tags_match = s.tags.iter().any(|t| t.to_lowercase().contains(&search_lower));
+                let tags_match = s
+                    .tags
+                    .iter()
+                    .any(|t| t.to_lowercase().contains(&search_lower));
                 if !name_matches && !desc_matches && !tags_match {
                     return false;
                 }
             }
 
             // Version filter
-            if let Some(ref version) = filters.version {
-                if !s.game_version.starts_with(version) {
-                    return false;
-                }
+            if let Some(ref version) = filters.version
+                && !s.game_version.starts_with(version)
+            {
+                return false;
             }
 
             // Has players filter
-            if let Some(has_players) = filters.has_players {
-                if has_players && s.player_count == 0 {
-                    return false;
-                }
+            if let Some(has_players) = filters.has_players
+                && has_players
+                && s.player_count == 0
+            {
+                return false;
             }
 
             // No password filter
-            if let Some(no_password) = filters.no_password {
-                if no_password && s.has_password {
-                    return false;
-                }
+            if let Some(no_password) = filters.no_password
+                && no_password
+                && s.has_password
+            {
+                return false;
             }
 
             // Min mods filter
-            if let Some(min_mods) = filters.min_mods {
-                if s.mod_count < min_mods {
-                    return false;
-                }
+            if let Some(min_mods) = filters.min_mods
+                && s.mod_count < min_mods
+            {
+                return false;
             }
 
             true
@@ -160,4 +165,3 @@ pub async fn get_server_history(
 
     Json(history)
 }
-

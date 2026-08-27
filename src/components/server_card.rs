@@ -53,23 +53,23 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                         html! {}
                     }}
                 </div>
-                
+
                 <div class="flex flex-wrap gap-2 mb-4">
                     <div class={classes!("flex", "items-center", "gap-1", "py-1", "px-2", "bg-bg-dark", "rounded-sm", "text-[0.85rem]", "font-mono", player_color_class)}>
                         <span>{"👥"}</span>
                         <span>{format!("{}/{}", server.player_count, server.max_players)}</span>
                     </div>
-                    
+
                     <div class="flex items-center gap-1 py-1 px-2 bg-bg-dark rounded-sm text-[0.85rem] font-mono">
                         <span>{"🎮"}</span>
                         <span>{&server.game_version}</span>
                     </div>
-                    
+
                     <div class="flex items-center gap-1 py-1 px-2 bg-bg-dark rounded-sm text-[0.85rem] font-mono">
                         <span>{"⏱️"}</span>
                         <span>{&game_time}</span>
                     </div>
-                    
+
                     {if server.mod_count > 0 {
                         html! {
                             <div class="flex items-center gap-1 py-1 px-2 bg-bg-dark rounded-sm text-[0.85rem] font-mono">
@@ -85,7 +85,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                         }
                     }}
                 </div>
-                
+
                 {if !server.description.is_empty() {
                     html! {
                         <p class="text-sm text-text-secondary mb-4 line-clamp-2">{parse_rich_text(&server.description)}</p>
@@ -93,7 +93,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                 } else {
                     html! {}
                 }}
-                
+
                 {if !server.tags.is_empty() {
                     html! {
                         <div class="flex flex-wrap gap-1">
@@ -106,7 +106,7 @@ pub fn server_card(props: &ServerCardProps) -> Html {
                     html! {}
                 }}
             </a>
-            
+
             // List row view
             <a href={details_url} class="server-row hidden flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-2 px-4 bg-bg-card/65 backdrop-blur-[10px] border border-border-subtle rounded-sm no-underline text-text-primary transition-all duration-200 hover:border-accent-primary hover:bg-bg-elevated">
                 <span class="flex-1 min-w-0 text-center sm:text-left overflow-hidden text-ellipsis whitespace-nowrap font-medium">

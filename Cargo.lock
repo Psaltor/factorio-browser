@@ -1208,6 +1208,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dotenvy",
+ "html-escape",
  "reqwest",
  "rocket",
  "semver",

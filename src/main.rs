@@ -1,21 +1,23 @@
-use factorio_browser::api::factorio::FactorioClient;
+use factorio_browser::api::factorio::{ApiError, FactorioClient};
 // TODO: Re-enable API routes later
 // use factorio_browser::api::routes::{get_server, get_server_history, get_servers, health};
 use factorio_browser::components::app::{App, AppProps};
 use factorio_browser::components::server_details::ServerDetails;
-use factorio_browser::db::queries::DbClient;
 use factorio_browser::db::models::CachedServer;
+use factorio_browser::db::queries::DbClient;
 use factorio_browser::utils::strip_all_tags;
+use rocket::Request;
+use rocket::fairing::AdHoc;
 use rocket::form::FromForm;
 use rocket::fs::{FileServer, NamedFile};
-use rocket::http::Header;
+use rocket::http::{Header, Status};
 use rocket::response::content::RawHtml;
 use rocket::response::{Responder, Response};
-use rocket::Request;
-use rocket::{get, routes, State};
+use rocket::{State, get, routes};
+use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::RwLock;
+use std::time::{Duration, Instant};
+use tokio::sync::{RwLock, Semaphore};
 use yew::ServerRenderer;
 
 /// Application state
@@ -25,6 +27,9 @@ struct AppState {
     last_error: Arc<RwLock<Option<String>>>,
     // Add cached servers
     cached_servers: Arc<RwLock<Vec<CachedServer>>>,
+    server_details:
+        Arc<RwLock<HashMap<u64, (Instant, factorio_browser::api::factorio::GameDetails)>>>,
+    detail_requests: Arc<Semaphore>,
 }
 
 /// Query parameters for the main page
@@ -41,24 +46,33 @@ struct IndexFilters {
 /// Wrap HTML content with the page shell, optionally with video background
 fn html_shell_with_video(title: &str, content: String, with_video: bool) -> String {
     let video_url = "https://lambs.cafe/wp-content/uploads/2025/12/space-age.mp4";
-    
+    let title_text = html_escape::encode_text(title);
+    let title_attribute = html_escape::encode_double_quoted_attribute(title);
+
     let video_element = if with_video {
-        format!(r#"<video class="video-background" autoplay muted loop playsinline preload="auto">
+        format!(
+            r#"<video class="video-background" autoplay muted loop playsinline preload="auto">
         <source src="{}" type="video/mp4">
-    </video>"#, video_url)
+    </video>"#,
+            video_url
+        )
     } else {
         String::new()
     };
-    
-    let body_class = if with_video { " class=\"has-video\"" } else { "" };
-    
+
+    let body_class = if with_video {
+        " class=\"has-video\""
+    } else {
+        ""
+    };
+
     format!(
         r##"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
+    <title>{title_text}</title>
     <meta name="description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
     <meta name="keywords" content="Factorio, multiplayer, servers, server browser, gaming, factory">
     <meta name="author" content="lambs.cafe">
@@ -66,14 +80,14 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{title}">
+    <meta property="og:title" content="{title_attribute}">
     <meta property="og:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
     <meta property="og:image" content="/static/favicon.svg">
     <meta property="og:site_name" content="Factorio Server Browser">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{title}">
+    <meta name="twitter:title" content="{title_attribute}">
     <meta name="twitter:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
     <meta name="twitter:image" content="/static/favicon.svg">
     
@@ -89,7 +103,8 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     <script src="/static/sort.js" defer></script>
 </body>
 </html>"##,
-        title = title,
+        title_text = title_text,
+        title_attribute = title_attribute,
         body_class = body_class,
         video = video_element,
         content = content
@@ -117,52 +132,105 @@ async fn index(state: &State<Arc<AppState>>, filters: IndexFilters) -> RawHtml<S
     let renderer = ServerRenderer::<App>::with_props(move || props.clone());
     let html_content = renderer.render().await;
 
-    RawHtml(html_shell_with_video("Factorio Server Browser", html_content, true))
+    RawHtml(html_shell_with_video(
+        "Factorio Server Browser",
+        html_content,
+        true,
+    ))
 }
 
 /// Server details page
 #[get("/server/<game_id>")]
-async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawHtml<String> {
-    // Always fetch fresh details from API
-    let api_result = state.factorio_client.get_game_details(game_id).await;
-    
-    // Fetch raw history and fill gaps with 0-player entries
-    // Since we only record when players > 0, we need to fill in the timeline
+async fn server_details_page(
+    state: &State<Arc<AppState>>,
+    game_id: u64,
+) -> Result<RawHtml<String>, (Status, RawHtml<String>)> {
+    let known_server = state
+        .cached_servers
+        .read()
+        .await
+        .iter()
+        .any(|server| server.game_id == game_id);
+    let cached_details = state
+        .server_details
+        .read()
+        .await
+        .get(&game_id)
+        .filter(|(cached_at, _)| cached_at.elapsed() < Duration::from_secs(30))
+        .map(|(_, details)| details.clone());
+
+    let api_result = if !known_server {
+        Err(ApiError::HttpStatus(reqwest::StatusCode::NOT_FOUND))
+    } else if let Some(details) = cached_details {
+        Ok(details)
+    } else {
+        let _permit = state
+            .detail_requests
+            .acquire()
+            .await
+            .expect("semaphore is open");
+        let result = state.factorio_client.get_game_details(game_id).await;
+        if let Ok(details) = &result {
+            let mut cache = state.server_details.write().await;
+            cache.retain(|_, (cached_at, _)| cached_at.elapsed() < Duration::from_secs(30));
+            cache.insert(game_id, (Instant::now(), details.clone()));
+        }
+        result
+    };
+
+    // Fetch raw history and preserve gaps where no observation was recorded.
     let raw_history = state
         .db
         .get_server_history(game_id, 24)
         .await
         .unwrap_or_default();
-    
+
     let history = fill_history_gaps(raw_history);
 
     match api_result {
         Ok(details) => {
-            let title = format!("{} - Factorio Server Browser", strip_all_tags(&details.name));
-            
-            let props = factorio_browser::components::server_details::ServerDetailsProps { 
-                server: details, 
+            let title = format!(
+                "{} - Factorio Server Browser",
+                strip_all_tags(&details.name)
+            );
+
+            let props = factorio_browser::components::server_details::ServerDetailsProps {
+                server: details,
                 history,
             };
             let renderer = ServerRenderer::<ServerDetails>::with_props(move || props.clone());
             let html_content = renderer.render().await;
-            RawHtml(html_shell_with_video(&title, html_content, true))
+            Ok(RawHtml(html_shell_with_video(&title, html_content, true)))
         }
-        Err(_) => {
-            let html_content = r#"
+        Err(error) => {
+            let (status, heading, message) = match error {
+                ApiError::HttpStatus(reqwest::StatusCode::NOT_FOUND) => (
+                    Status::NotFound,
+                    "Server Not Found",
+                    "The requested server could not be found. It may have restarted and received a new game ID.",
+                ),
+                ApiError::RequestFailed(error) if error.is_timeout() => (
+                    Status::GatewayTimeout,
+                    "Factorio API Timed Out",
+                    "The server details service did not respond in time. Please try again shortly.",
+                ),
+                _ => (
+                    Status::BadGateway,
+                    "Server Details Unavailable",
+                    "Server details are temporarily unavailable. Please try again shortly.",
+                ),
+            };
+            let html_content = format!(
+                r#"
                 <div class="min-h-screen flex flex-col">
                     <header class="bg-bg-card/65 backdrop-blur-[10px] border-b border-border-subtle py-8 px-6">
                         <div class="max-w-[1400px] mx-auto text-center">
-                            <h1 class="text-4xl font-bold text-text-bright">Server Not Found</h1>
+                            <h1 class="text-4xl font-bold text-text-bright">{heading}</h1>
                         </div>
                     </header>
                     <main class="flex-1 max-w-[1400px] mx-auto py-8 px-6 w-full">
                         <div class="text-center py-8 bg-status-full/10 border border-status-full/30 rounded-md text-status-full">
-                            <p class="mb-4">
-                                The requested server could not be found.<br/>
-                                If you viewed this page previously, the server may have restarted and triggered a new game_id.<br/>
-                                <b>It's a limitation of the Factorio Matchmaking API.</b>
-                            </p>
+                            <p class="mb-4">{message}</p>
                             <a href="/" class="text-accent-primary hover:text-accent-secondary transition-colors duration-200">
                                 ← Back to Server List
                             </a>
@@ -170,8 +238,11 @@ async fn server_details_page(state: &State<Arc<AppState>>, game_id: u64) -> RawH
                     </main>
                 </div>
             "#
-            .to_string();
-            RawHtml(html_shell_with_video("Server Not Found", html_content, true))
+            );
+            Err((
+                status,
+                RawHtml(html_shell_with_video(heading, html_content, true)),
+            ))
         }
     }
 }
@@ -183,28 +254,32 @@ impl<'r> Responder<'r, 'static> for CachedFile {
     fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
         Response::build_from(self.0.respond_to(req)?)
             // Cache for 1 day, revalidate with server
-            .header(Header::new("Cache-Control", "public, max-age=86400, must-revalidate"))
+            .header(Header::new(
+                "Cache-Control",
+                "public, max-age=86400, must-revalidate",
+            ))
             .ok()
     }
 }
 
-//// Fill gaps in history data with 0-player entries
-/// Since we only record when players > 0, we need to fill in periods of inactivity
-fn fill_history_gaps(raw_history: Vec<factorio_browser::db::models::ServerHistory>) -> Vec<factorio_browser::components::server_details::HistoryEntry> {
+/// Fill gaps in history data while distinguishing missing observations from zero players.
+fn fill_history_gaps(
+    raw_history: Vec<factorio_browser::db::models::ServerHistory>,
+) -> Vec<factorio_browser::components::server_details::HistoryEntry> {
     use chrono::{DateTime, Duration, Utc};
     use factorio_browser::components::server_details::HistoryEntry;
     use std::collections::HashMap;
-    
+
     let now = Utc::now();
-    
+
     // Create a map of hour -> player counts for that hour
     let mut hourly_counts: HashMap<i64, Vec<usize>> = HashMap::new();
-    
+
     for record in &raw_history {
         if let Ok(recorded_at) = DateTime::parse_from_rfc3339(&record.recorded_at) {
             // Calculate hours ago (0 = current hour, 23 = 23 hours ago)
             let hours_ago = (now - recorded_at.with_timezone(&Utc)).num_hours();
-            if hours_ago >= 0 && hours_ago < 24 {
+            if (0..24).contains(&hours_ago) {
                 hourly_counts
                     .entry(hours_ago)
                     .or_default()
@@ -212,16 +287,15 @@ fn fill_history_gaps(raw_history: Vec<factorio_browser::db::models::ServerHistor
             }
         }
     }
-    
+
     // Generate 24 hourly entries (newest first to match expected order)
-    // Each entry represents the average player count for that hour, or 0 if no data
+    // Each entry represents the average player count for that hour, or None if no data.
     (0..24)
         .map(|hours_ago| {
             let avg_count = hourly_counts
                 .get(&hours_ago)
-                .map(|counts| counts.iter().sum::<usize>() / counts.len().max(1))
-                .unwrap_or(0);
-            
+                .map(|counts| counts.iter().sum::<usize>() / counts.len().max(1));
+
             let timestamp = now - Duration::hours(hours_ago);
             HistoryEntry {
                 player_count: avg_count,
@@ -263,18 +337,27 @@ async fn refresh_servers(state: Arc<AppState>) {
                 match state.db.cache_servers(servers).await {
                     Ok(_) => {
                         println!("Cached {} servers", count);
-                        *state.last_error.write().await = None;
-                        
                         // Update in-memory cache from DB
-                        if let Ok(all_servers) = state.db.get_all_servers().await {
-                            *state.cached_servers.write().await = all_servers;
+                        match state.db.get_all_servers().await {
+                            Ok(all_servers) => {
+                                *state.cached_servers.write().await = all_servers;
+                                *state.last_error.write().await = None;
+                            }
+                            Err(error) => {
+                                eprintln!("Failed to reload server cache: {error}");
+                                *state.last_error.write().await = Some(
+                                    "Server data was updated, but the displayed cache may be stale."
+                                        .to_string(),
+                                );
+                            }
                         }
                     }
                     Err(e) => {
                         let raw_msg = format!("Failed to cache servers: {}", e);
                         eprintln!("{}", raw_msg);
                         // Display sanitized message to users
-                        *state.last_error.write().await = Some("Failed to update server cache.".to_string());
+                        *state.last_error.write().await =
+                            Some("Failed to update server cache.".to_string());
                     }
                 }
 
@@ -297,20 +380,14 @@ async fn refresh_servers(state: Arc<AppState>) {
 }
 
 #[rocket::main]
+#[allow(clippy::result_large_err)]
 async fn main() -> Result<(), rocket::Error> {
     // Load environment variables from .env file
     dotenvy::dotenv().ok();
 
     // Get configuration from environment variables
-    let username = std::env::var("FACTORIO_USERNAME").unwrap_or_else(|_| {
-        eprintln!("Warning: FACTORIO_USERNAME not set, API calls will fail");
-        String::new()
-    });
-
-    let token = std::env::var("FACTORIO_TOKEN").unwrap_or_else(|_| {
-        eprintln!("Warning: FACTORIO_TOKEN not set, API calls will fail");
-        String::new()
-    });
+    let username = required_env("FACTORIO_USERNAME");
+    let token = required_env("FACTORIO_TOKEN");
 
     let db_url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "mem://".to_string());
     let db_ns = std::env::var("SURREAL_NS").unwrap_or_else(|_| "factorio".to_string());
@@ -334,12 +411,25 @@ async fn main() -> Result<(), rocket::Error> {
     // Initialize Factorio API client
     let factorio_client = FactorioClient::new_shared(username, token);
 
-    // Create application state with empty cache
+    let cached_servers = match db.get_all_servers().await {
+        Ok(servers) => {
+            println!("Loaded {} servers from cache", servers.len());
+            servers
+        }
+        Err(error) => {
+            eprintln!("Failed to load server cache: {error}");
+            Vec::new()
+        }
+    };
+
+    // Create application state with the persistent cache available immediately.
     let app_state = Arc::new(AppState {
         db: db.clone(),
         factorio_client: factorio_client.clone(),
         last_error: Arc::new(RwLock::new(None)),
-        cached_servers: Arc::new(RwLock::new(Vec::new())),
+        cached_servers: Arc::new(RwLock::new(cached_servers)),
+        server_details: Arc::new(RwLock::new(HashMap::new())),
+        detail_requests: Arc::new(Semaphore::new(8)),
     });
 
     // Start background refresh task
@@ -348,13 +438,24 @@ async fn main() -> Result<(), rocket::Error> {
         refresh_servers(refresh_state).await;
     });
 
-    let cwd = std::env::current_dir().expect("Cannot get current directory");
-    let static_dir = cwd.join("static");
+    let static_dir = std::env::var_os("STATIC_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::current_dir()
+                .expect("Cannot get current directory")
+                .join("static")
+        });
+    assert!(
+        static_dir.is_dir(),
+        "Static asset directory does not exist: {}",
+        static_dir.display()
+    );
 
     // Build and launch Rocket server
     rocket::build()
         .manage(app_state.db.clone())
         .manage(app_state)
+        .attach(security_headers())
         .mount("/", routes![index, server_details_page])
         .mount("/static", FileServer::from(static_dir))
         // TODO: Re-enable API routes later
@@ -363,4 +464,67 @@ async fn main() -> Result<(), rocket::Error> {
         .await?;
 
     Ok(())
+}
+
+fn security_headers() -> AdHoc {
+    AdHoc::on_response("Security headers", |_request, response| {
+        Box::pin(async move {
+            response.set_raw_header("X-Content-Type-Options", "nosniff");
+            response.set_raw_header("X-Frame-Options", "DENY");
+            response.set_raw_header("Referrer-Policy", "strict-origin-when-cross-origin");
+            response.set_raw_header(
+                "Permissions-Policy",
+                "camera=(), geolocation=(), microphone=()",
+            );
+            response.set_raw_header(
+                "Content-Security-Policy",
+                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src https://lambs.cafe; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+            );
+        })
+    })
+}
+
+fn required_env(name: &str) -> String {
+    std::env::var(name)
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| panic!("{name} must be set and non-empty"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{fill_history_gaps, html_shell_with_video};
+    use factorio_browser::db::models::ServerHistory;
+
+    #[test]
+    fn escapes_untrusted_page_titles() {
+        let shell = html_shell_with_video(
+            "server </title><script>alert('xss')</script> \"quoted\"",
+            "<main>safe content</main>".to_string(),
+            false,
+        );
+
+        assert!(!shell.contains("</title><script>"));
+        assert!(shell.contains("<title>server &lt;/title&gt;&lt;script&gt;alert('xss')&lt;/script&gt; \"quoted\"</title>"));
+        assert!(shell.contains("content=\"server &lt;/title&gt;&lt;script&gt;alert('xss')&lt;/script&gt; &quot;quoted&quot;\""));
+        assert!(shell.contains("<main>safe content</main>"));
+    }
+
+    #[test]
+    fn history_distinguishes_zero_players_from_missing_observations() {
+        let history = fill_history_gaps(vec![ServerHistory {
+            id: None,
+            game_id: 1,
+            player_count: 0,
+            recorded_at: chrono::Utc::now().to_rfc3339(),
+        }]);
+
+        assert_eq!(history.len(), 24);
+        assert_eq!(history[0].player_count, Some(0));
+        assert!(
+            history[1..]
+                .iter()
+                .all(|entry| entry.player_count.is_none())
+        );
+    }
 }

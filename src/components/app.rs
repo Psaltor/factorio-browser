@@ -40,7 +40,7 @@ pub fn app(props: &AppProps) -> Html {
                     <p class="text-text-secondary text-lg mt-2">{"Find and explore public Factorio multiplayer servers"}</p>
                     <p class="text-text-muted text-sm mt-1">{"Not affiliated with Wube Software"}</p>
                 </div>
-                
+
                 <div class="flex justify-center gap-8 flex-wrap">
                     <div class="text-center py-4 px-6 bg-bg-card border border-border-subtle rounded-sm min-w-[140px]">
                         <span class="block text-[2rem] font-semibold text-accent-primary font-mono">{props.servers.len()}</span>
@@ -56,9 +56,9 @@ pub fn app(props: &AppProps) -> Html {
                     </div>
                 </div>
             </header>
-            
+
             <main class="flex-1 max-w-[1400px] mx-auto py-8 px-6 w-full">
-                <ServerList 
+                <ServerList
                     servers={props.servers.clone()}
                     error={props.error.clone()}
                     current_search={props.search.clone()}
@@ -69,7 +69,7 @@ pub fn app(props: &AppProps) -> Html {
                     selected_tags={props.tags.clone()}
                 />
             </main>
-            
+
             <Footer />
         </div>
     }

@@ -26,12 +26,18 @@ pub struct FiltersProps {
 /// Build URL with current filters, optionally toggling a tag
 fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: bool) -> String {
     let mut params = Vec::new();
-    
+
     if !props.current_search.is_empty() {
-        params.push(format!("search={}", urlencoding::encode(&props.current_search)));
+        params.push(format!(
+            "search={}",
+            urlencoding::encode(&props.current_search)
+        ));
     }
     if !props.current_version.is_empty() {
-        params.push(format!("version={}", urlencoding::encode(&props.current_version)));
+        params.push(format!(
+            "version={}",
+            urlencoding::encode(&props.current_version)
+        ));
     }
     if props.has_players {
         params.push("has_players=true".to_string());
@@ -42,7 +48,7 @@ fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: 
     if props.is_dedicated {
         params.push("is_dedicated=true".to_string());
     }
-    
+
     // Handle tags
     if !clear_tags {
         let mut new_tags = props.selected_tags.clone();
@@ -59,7 +65,7 @@ fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: 
             params.push(format!("tags={}", urlencoding::encode(&new_tags.join(","))));
         }
     }
-    
+
     if params.is_empty() {
         "/".to_string()
     } else {
@@ -73,20 +79,23 @@ fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: 
 pub fn filters(props: &FiltersProps) -> Html {
     let is_latest_selected = props.current_version.is_empty();
     let is_all_selected = props.current_version == "all";
-    
+
     // Create comma-separated string of selected tags for hidden input
     let selected_tags_value = props.selected_tags.join(",");
     let has_selected_tags = !props.selected_tags.is_empty();
-    
+
     // Build URL for clearing all tags
     let clear_tags_url = build_filter_url(props, None, true);
-    
+
     // Build URL for clearing search (preserves other filters)
     let clear_search_url = {
         let mut params = Vec::new();
         // Don't include search - we're clearing it
         if !props.current_version.is_empty() {
-            params.push(format!("version={}", urlencoding::encode(&props.current_version)));
+            params.push(format!(
+                "version={}",
+                urlencoding::encode(&props.current_version)
+            ));
         }
         if props.has_players {
             params.push("has_players=true".to_string());
@@ -98,7 +107,10 @@ pub fn filters(props: &FiltersProps) -> Html {
             params.push("is_dedicated=true".to_string());
         }
         if !props.selected_tags.is_empty() {
-            params.push(format!("tags={}", urlencoding::encode(&props.selected_tags.join(","))));
+            params.push(format!(
+                "tags={}",
+                urlencoding::encode(&props.selected_tags.join(","))
+            ));
         }
         if params.is_empty() {
             "/".to_string()
@@ -115,8 +127,8 @@ pub fn filters(props: &FiltersProps) -> Html {
                 <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
                     <label for="search" class="text-xs text-text-secondary uppercase tracking-wider">{"Search"}</label>
                     <div style="position: relative;">
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             id="search"
                             name="search"
                             placeholder="Search titles, descriptions, or tags..."
@@ -125,7 +137,7 @@ pub fn filters(props: &FiltersProps) -> Html {
                         />
                         {if has_search {
                             html! {
-                                <a 
+                                <a
                                     href={clear_search_url}
                                     style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);"
                                     class="flex items-center justify-center w-5 h-5 text-text-secondary hover:text-text-primary transition-colors rounded-full hover:bg-border-subtle"
@@ -139,7 +151,7 @@ pub fn filters(props: &FiltersProps) -> Html {
                         }}
                     </div>
                 </div>
-                
+
                 <div class="flex flex-col gap-1">
                     <label for="version" class="text-xs text-text-secondary uppercase tracking-wider">{"Version"}</label>
                     <select id="version" name="version" class="py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary">
@@ -156,11 +168,11 @@ pub fn filters(props: &FiltersProps) -> Html {
                         })}
                     </select>
                 </div>
-                
+
                 <div class="flex flex-col gap-1 justify-end">
                     <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             name="has_players"
                             value="true"
                             checked={props.has_players}
@@ -169,11 +181,11 @@ pub fn filters(props: &FiltersProps) -> Html {
                         <span class="text-sm text-text-primary">{"Has Players"}</span>
                     </label>
                 </div>
-                
+
                 <div class="flex flex-col gap-1 justify-end">
                     <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             name="no_password"
                             value="true"
                             checked={props.no_password}
@@ -182,11 +194,11 @@ pub fn filters(props: &FiltersProps) -> Html {
                         <span class="text-sm text-text-primary">{"No Password"}</span>
                     </label>
                 </div>
-                
+
                 <div class="flex flex-col gap-1 justify-end">
                     <label class="flex items-center gap-2 cursor-pointer py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm transition-colors duration-200 hover:border-accent-primary">
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             name="is_dedicated"
                             value="true"
                             checked={props.is_dedicated}
@@ -195,14 +207,14 @@ pub fn filters(props: &FiltersProps) -> Html {
                         <span class="text-sm text-text-primary">{"Dedicated"}</span>
                     </label>
                 </div>
-                
+
                 <div class="flex flex-col gap-1 justify-end">
                     <button type="submit" class="py-2 px-6 bg-btn-green border border-btn-green-dark rounded-sm text-bg-dark font-display text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-btn-green-hover active:bg-btn-green-dark">
                         {"Apply Filters"}
                     </button>
                 </div>
             </div>
-            
+
             // Tag pills row
             {if !props.available_tags.is_empty() {
                 html! {
@@ -211,7 +223,7 @@ pub fn filters(props: &FiltersProps) -> Html {
                             <span class="text-xs text-text-secondary uppercase tracking-wider">{"Tags"}</span>
                             {if has_selected_tags {
                                 html! {
-                                    <a 
+                                    <a
                                         href={clear_tags_url}
                                         class="text-xs text-accent-primary hover:text-accent-secondary transition-colors cursor-pointer no-underline"
                                     >
@@ -227,16 +239,16 @@ pub fn filters(props: &FiltersProps) -> Html {
                                 let is_selected = props.selected_tags.contains(tag);
                                 let tag_escaped = strip_all_tags(tag);
                                 let toggle_url = build_filter_url(props, Some(tag), false);
-                                
+
                                 // Match server card tag styling: py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary
                                 let class = if is_selected {
                                     "py-1 px-2 bg-accent-primary border border-accent-primary rounded-sm text-xs text-bg-dark font-medium cursor-pointer transition-all duration-200 no-underline"
                                 } else {
                                     "py-1 px-2 bg-accent-glow border border-accent-primary rounded-sm text-xs text-accent-primary cursor-pointer transition-all duration-200 no-underline hover:bg-accent-primary hover:text-bg-dark"
                                 };
-                                
+
                                 html! {
-                                    <a 
+                                    <a
                                         href={toggle_url}
                                         class={class}
                                     >
@@ -250,7 +262,7 @@ pub fn filters(props: &FiltersProps) -> Html {
             } else {
                 html! {}
             }}
-            
+
             // Hidden input for tags (used when form is submitted via Apply button)
             <input type="hidden" id="tags-input" name="tags" value={selected_tags_value} />
         </form>

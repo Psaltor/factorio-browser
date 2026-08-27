@@ -13,4 +13,3 @@ pub fn footer() -> Html {
         </footer>
     }
 }
-
