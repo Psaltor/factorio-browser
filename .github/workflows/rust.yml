@@ -23,7 +23,8 @@ jobs:
       run: cargo clippy --all-targets --all-features --locked -- -D warnings
     - name: Verify generated CSS
       run: |
-        npm install --global @tailwindcss/cli@4.3.3
+        npm ci
+        export PATH="$PWD/node_modules/.bin:$PATH"
         make css-prod
         git diff --exit-code -- static/style.css
     - name: Build
@@ -43,7 +44,8 @@ jobs:
     - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
     - name: Generate CSS
       run: |
-        npm install --global @tailwindcss/cli@4.3.3
+        npm ci
+        export PATH="$PWD/node_modules/.bin:$PATH"
         make css-prod
     - name: Build release
       run: cargo build --release --locked --verbose
