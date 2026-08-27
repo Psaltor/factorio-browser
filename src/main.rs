@@ -6,13 +6,11 @@ use factorio_browser::components::server_details::ServerDetails;
 use factorio_browser::db::models::CachedServer;
 use factorio_browser::db::queries::DbClient;
 use factorio_browser::utils::strip_all_tags;
-use rocket::Request;
 use rocket::fairing::AdHoc;
 use rocket::form::FromForm;
-use rocket::fs::{FileServer, NamedFile};
-use rocket::http::{Header, Status};
+use rocket::fs::FileServer;
+use rocket::http::Status;
 use rocket::response::content::RawHtml;
-use rocket::response::{Responder, Response};
 use rocket::{State, get, routes};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -46,6 +44,7 @@ struct IndexFilters {
 /// Wrap HTML content with the page shell, optionally with video background
 fn html_shell_with_video(title: &str, content: String, with_video: bool) -> String {
     let video_url = "https://lambs.cafe/wp-content/uploads/2025/12/space-age.mp4";
+    let asset_version = env!("CARGO_PKG_VERSION");
     let title_text = html_escape::encode_text(title);
     let title_attribute = html_escape::encode_double_quoted_attribute(title);
 
@@ -82,17 +81,17 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
     <meta property="og:type" content="website">
     <meta property="og:title" content="{title_attribute}">
     <meta property="og:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
-    <meta property="og:image" content="/static/favicon.svg">
+    <meta property="og:image" content="/static/favicon.svg?v={asset_version}">
     <meta property="og:site_name" content="Factorio Server Browser">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{title_attribute}">
     <meta name="twitter:description" content="Find and explore public Factorio multiplayer servers. Browse servers by version, tags, player count, and more.">
-    <meta name="twitter:image" content="/static/favicon.svg">
+    <meta name="twitter:image" content="/static/favicon.svg?v={asset_version}">
     
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v={asset_version}">
+    <link rel="stylesheet" href="/static/style.css?v={asset_version}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -100,11 +99,12 @@ fn html_shell_with_video(title: &str, content: String, with_video: bool) -> Stri
 <body{body_class}>
     {video}
     {content}
-    <script src="/static/sort.js" defer></script>
+    <script src="/static/sort.js?v={asset_version}" defer></script>
 </body>
 </html>"##,
         title_text = title_text,
         title_attribute = title_attribute,
+        asset_version = asset_version,
         body_class = body_class,
         video = video_element,
         content = content
@@ -244,21 +244,6 @@ async fn server_details_page(
                 RawHtml(html_shell_with_video(heading, html_content, true)),
             ))
         }
-    }
-}
-
-/// Wrapper for NamedFile that adds caching headers
-pub struct CachedFile(NamedFile);
-
-impl<'r> Responder<'r, 'static> for CachedFile {
-    fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
-        Response::build_from(self.0.respond_to(req)?)
-            // Cache for 1 day, revalidate with server
-            .header(Header::new(
-                "Cache-Control",
-                "public, max-age=86400, must-revalidate",
-            ))
-            .ok()
     }
 }
 
@@ -467,8 +452,11 @@ async fn main() -> Result<(), rocket::Error> {
 }
 
 fn security_headers() -> AdHoc {
-    AdHoc::on_response("Security headers", |_request, response| {
+    AdHoc::on_response("Response headers", |request, response| {
         Box::pin(async move {
+            if request.uri().path().as_str().starts_with("/static/") {
+                response.set_raw_header("Cache-Control", "public, max-age=31536000, immutable");
+            }
             response.set_raw_header("X-Content-Type-Options", "nosniff");
             response.set_raw_header("X-Frame-Options", "DENY");
             response.set_raw_header("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -508,6 +496,10 @@ mod tests {
         assert!(shell.contains("<title>server &lt;/title&gt;&lt;script&gt;alert('xss')&lt;/script&gt; \"quoted\"</title>"));
         assert!(shell.contains("content=\"server &lt;/title&gt;&lt;script&gt;alert('xss')&lt;/script&gt; &quot;quoted&quot;\""));
         assert!(shell.contains("<main>safe content</main>"));
+        assert!(shell.contains(&format!(
+            "/static/style.css?v={}",
+            env!("CARGO_PKG_VERSION")
+        )));
     }
 
     #[test]
