@@ -77,8 +77,8 @@ fn build_filter_url(props: &FiltersProps, toggle_tag: Option<&str>, clear_tags: 
 /// In SSR mode, filters work via form submission / URL parameters
 #[function_component(Filters)]
 pub fn filters(props: &FiltersProps) -> Html {
-    let is_latest_selected = props.current_version.is_empty();
-    let is_all_selected = props.current_version == "all";
+    let is_latest_selected = props.current_version == props.latest_version;
+    let is_all_selected = props.current_version.is_empty() || props.current_version == "all";
 
     // Create comma-separated string of selected tags for hidden input
     let selected_tags_value = props.selected_tags.join(",");
@@ -155,7 +155,7 @@ pub fn filters(props: &FiltersProps) -> Html {
                 <div class="flex flex-col gap-1">
                     <label for="version" class="text-xs text-text-secondary uppercase tracking-wider">{"Version"}</label>
                     <select id="version" name="version" class="py-2 px-4 bg-bg-inset border border-border-subtle rounded-sm text-text-primary font-display text-[0.95rem] transition-colors duration-200 focus:outline-none focus:border-accent-primary">
-                        <option value="" selected={is_latest_selected}>
+                        <option value={props.latest_version.clone()} selected={is_latest_selected}>
                             {format!("Latest ({})", props.latest_version)}
                         </option>
                         <option value="all" selected={is_all_selected}>{"All Versions"}</option>

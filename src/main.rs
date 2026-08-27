@@ -478,7 +478,7 @@ fn security_headers() -> AdHoc {
             );
             response.set_raw_header(
                 "Content-Security-Policy",
-                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; media-src https://lambs.cafe; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://lambs.cafe; media-src https://lambs.cafe; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
             );
         })
     })

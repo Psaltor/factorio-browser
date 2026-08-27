@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Thing;
+use surrealdb::types::{RecordId, SurrealValue};
 
 /// Cached server record stored in SurrealDB
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue, PartialEq)]
 pub struct CachedServer {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<Thing>,
+    pub id: Option<RecordId>,
     pub game_id: u64,
     pub name: String,
     #[serde(default)]
@@ -30,17 +30,17 @@ pub struct CachedServer {
 }
 
 /// Server history record for tracking player counts over time
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 pub struct ServerHistory {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<Thing>,
+    pub id: Option<RecordId>,
     pub game_id: u64,
     pub player_count: usize,
     pub recorded_at: String,
 }
 
 /// Input type for creating a new cached server (without id)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 pub struct NewCachedServer {
     pub game_id: u64,
     pub name: String,
@@ -60,7 +60,7 @@ pub struct NewCachedServer {
 }
 
 /// Input type for creating a new history record
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 pub struct NewServerHistory {
     pub game_id: u64,
     pub player_count: usize,

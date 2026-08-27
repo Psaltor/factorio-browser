@@ -43,10 +43,8 @@ pub fn server_list(props: &ServerListProps) -> Html {
     // Latest version is first after sorting
     let latest_version = versions.first().cloned().unwrap_or_default();
 
-    // Determine effective version filter (empty = latest, "all" = no filter)
-    let effective_version = if props.current_version.is_empty() {
-        &latest_version
-    } else if props.current_version == "all" {
+    // Empty and "all" both mean no version filter.
+    let effective_version = if props.current_version.is_empty() || props.current_version == "all" {
         ""
     } else {
         &props.current_version

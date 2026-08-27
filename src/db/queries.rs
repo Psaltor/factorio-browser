@@ -60,8 +60,8 @@ impl DbClient {
             match (username, password) {
                 (Some(user), Some(pass)) => {
                     db.signin(Root {
-                        username: user,
-                        password: pass,
+                        username: user.to_string(),
+                        password: pass.to_string(),
                     })
                     .await
                     .map_err(|e| DbError::Connection(e.to_string()))?;
