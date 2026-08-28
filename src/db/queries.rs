@@ -1,5 +1,6 @@
 use crate::api::factorio::GameServer;
 use crate::db::models::{CachedServer, NewCachedServer, NewServerHistory, ServerHistory};
+use std::collections::HashSet;
 use surrealdb::Surreal;
 use surrealdb::engine::any::{Any, connect};
 use surrealdb::opt::auth::Root;
@@ -131,25 +132,52 @@ impl DbClient {
         Ok(())
     }
 
-    /// Cache a list of servers from the API (batch operation)
-    /// Uses a transaction to ensure atomicity - either all servers are updated or none are
+    /// Cache a list of servers from the API (batch operation).
+    /// Existing records are updated in place and only stale records are deleted.
     pub async fn cache_servers(&self, servers: Vec<GameServer>) -> Result<usize, DbError> {
         let start = std::time::Instant::now();
         let count = servers.len();
 
-        // Use native insert_many for better performance
+        let mut game_ids = HashSet::with_capacity(count);
+        for server in &servers {
+            if !game_ids.insert(server.game_id) {
+                return Err(DbError::Query(format!(
+                    "duplicate game_id {} in server snapshot",
+                    server.game_id
+                )));
+            }
+        }
+
         let new_servers: Vec<NewCachedServer> = servers.into_iter().map(|s| s.into()).collect();
+        let game_ids: Vec<u64> = game_ids.into_iter().collect();
 
         self.db
             .query(
                 r#"
                 BEGIN TRANSACTION;
-                DELETE FROM servers;
-                INSERT INTO servers $servers;
+                INSERT INTO servers $servers
+                    ON DUPLICATE KEY UPDATE
+                        name = $input.name,
+                        description = $input.description,
+                        max_players = $input.max_players,
+                        player_count = $input.player_count,
+                        players = $input.players,
+                        game_time_elapsed = $input.game_time_elapsed,
+                        has_password = $input.has_password,
+                        tags = $input.tags,
+                        mod_count = $input.mod_count,
+                        game_version = $input.game_version,
+                        build_version = $input.build_version,
+                        host_address = $input.host_address,
+                        headless_server = $input.headless_server,
+                        cached_at = $input.cached_at
+                    RETURN NONE;
+                DELETE FROM servers WHERE game_id NOT IN $game_ids;
                 COMMIT TRANSACTION;
                 "#,
             )
             .bind(("servers", new_servers))
+            .bind(("game_ids", game_ids))
             .await?
             .check()?;
 
@@ -326,6 +354,32 @@ mod tests {
 
         db.cache_servers(Vec::new()).await.unwrap();
         assert!(db.get_all_servers().await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn cache_replacement_updates_in_place_and_removes_stale_servers() {
+        let db = DbClient::connect("mem://", "test", "cache_upsert", None, None)
+            .await
+            .unwrap();
+        db.cache_servers(vec![server(1, "original", &[]), server(2, "stale", &[])])
+            .await
+            .unwrap();
+        let original_id = db.get_server(1).await.unwrap().unwrap().id.unwrap();
+
+        db.cache_servers(vec![
+            server(1, "updated", &["player"]),
+            server(3, "new", &[]),
+        ])
+        .await
+        .unwrap();
+
+        let cached = db.get_all_servers().await.unwrap();
+        assert_eq!(cached.len(), 2);
+        assert!(!cached.iter().any(|server| server.game_id == 2));
+        let updated = cached.iter().find(|server| server.game_id == 1).unwrap();
+        assert_eq!(updated.id.as_ref(), Some(&original_id));
+        assert_eq!(updated.name, "updated");
+        assert_eq!(updated.player_count, 1);
     }
 
     #[tokio::test]
